@@ -63,6 +63,12 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnSalvar).setOnClickListener(v -> salvarPdf());
         btnEnviar.setOnClickListener(v -> enviarPdf());
 
+        TextView tvFooter = findViewById(R.id.tvFooter);
+        tvFooter.setOnClickListener(v -> {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Vboldan/CalculadoradeCompras_V2"));
+        startActivity(intent);
+        });
+
         entLimite.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) atualizarStatus();
         });
@@ -272,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
         itensSelecionados.clear();
         boxLista.removeAllViews();
         totalGasto = 0.0;
-
+https://github.com/Vboldan/CalculadoradeCompras_V2
         entLimite.setText("");
         entProduto.setText("");
         entPreco.setText("");

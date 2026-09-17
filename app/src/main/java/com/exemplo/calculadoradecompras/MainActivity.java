@@ -1,6 +1,8 @@
 package com.exemplo.calculadoradecompras;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -45,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         getWindow().setStatusBarColor(android.graphics.Color.parseColor("#23272d"));
 
-
         entLimite = findViewById(R.id.entLimite);
         entProduto = findViewById(R.id.entProduto);
         entPreco = findViewById(R.id.entPreco);
@@ -65,8 +66,8 @@ public class MainActivity extends AppCompatActivity {
 
         TextView tvFooter = findViewById(R.id.tvFooter);
         tvFooter.setOnClickListener(v -> {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Vboldan/CalculadoradeCompras_V2"));
-        startActivity(intent);
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Vboldan/CalculadoradeCompras_V2"));
+            startActivity(intent);
         });
 
         entLimite.setOnFocusChangeListener((v, hasFocus) -> {
@@ -187,6 +188,39 @@ public class MainActivity extends AppCompatActivity {
         atualizarStatus();
     }
 
+    private void limparTudo() {
+        produtos.clear();
+        itensSelecionados.clear();
+        boxLista.removeAllViews();
+        totalGasto = 0.0;
+
+        entLimite.setText("");
+        entProduto.setText("");
+        entPreco.setText("");
+        entQtd.setText("1");
+
+        atualizarStatus();
+        entLimite.requestFocus();
+    }
+
+    private void enviarPdf() {
+        if (ultimoArquivoPdf == null || !ultimoArquivoPdf.exists()) {
+            mostrarAlerta("Erro", "Arquivo PDF não encontrado. Salve primeiro.");
+            return;
+        }
+
+        try {
+            Uri uri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".fileprovider", ultimoArquivoPdf);
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("application/pdf");
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(intent, "Compartilhar Lista de Compras"));
+        } catch (Exception e) {
+            mostrarAlerta("Erro", "Erro ao compartilhar: " + e.getMessage());
+        }
+    }
+
     private void salvarPdf() {
         if (produtos.isEmpty()) {
             mostrarAlerta("Aviso", "Nenhum produto na lista!");
@@ -198,6 +232,22 @@ public class MainActivity extends AppCompatActivity {
         PdfDocument.Page page = document.startPage(pageInfo);
         Canvas canvas = page.getCanvas();
         Paint paint = new Paint();
+
+        // --- MARCA D'ÁGUA (DESENHADA NO FUNDO) ---
+        Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icone);
+        if (iconBitmap != null) {
+            int larguraDesejada = 350;
+            int alturaDesejada = 350;
+            Bitmap scaledIcon = Bitmap.createScaledBitmap(iconBitmap, larguraDesejada, alturaDesejada, true);
+
+            Paint watermarkPaint = new Paint();
+            watermarkPaint.setAlpha(35); // Transparência suave (0 a 255)
+
+            int posX = (pageInfo.getPageWidth() - scaledIcon.getWidth()) / 2;
+            int posY = (pageInfo.getPageHeight() - scaledIcon.getHeight()) / 2;
+
+            canvas.drawBitmap(scaledIcon, posX, posY, watermarkPaint);
+        }
 
         // Título Principal
         paint.setTextSize(18);
@@ -263,46 +313,12 @@ public class MainActivity extends AppCompatActivity {
             document.writeTo(new FileOutputStream(ultimoArquivoPdf));
             btnEnviar.setEnabled(true);
             mostrarAlerta("Sucesso", "PDF salvo com sucesso em:\n" + ultimoArquivoPdf.getAbsolutePath());
-            
-            // Reseta a interface e foca em Disponível após salvar
+
             limparTudo();
         } catch (IOException e) {
             mostrarAlerta("Erro", "Erro ao salvar PDF: " + e.getMessage());
         } finally {
             document.close();
-        }
-    }
-
-    private void limparTudo() {
-        produtos.clear();
-        itensSelecionados.clear();
-        boxLista.removeAllViews();
-        totalGasto = 0.0;
-https://github.com/Vboldan/CalculadoradeCompras_V2
-        entLimite.setText("");
-        entProduto.setText("");
-        entPreco.setText("");
-        entQtd.setText("1");
-
-        atualizarStatus();
-        entLimite.requestFocus();
-    }
-
-    private void enviarPdf() {
-        if (ultimoArquivoPdf == null || !ultimoArquivoPdf.exists()) {
-            mostrarAlerta("Erro", "Arquivo PDF não encontrado. Salve primeiro.");
-            return;
-        }
-
-        try {
-            Uri uri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".fileprovider", ultimoArquivoPdf);
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("application/pdf");
-            intent.putExtra(Intent.EXTRA_STREAM, uri);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(intent, "Compartilhar Lista de Compras"));
-        } catch (Exception e) {
-            mostrarAlerta("Erro", "Erro ao compartilhar: " + e.getMessage());
         }
     }
 

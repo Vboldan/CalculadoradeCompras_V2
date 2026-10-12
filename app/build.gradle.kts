@@ -39,4 +39,15 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    
+    // --- NOVAS DEPENDÊNCIAS ---
+    
+    // Suporte a Abas (ViewPager2)
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
+
+    // Banco de Dados local (Room)
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    add("annotationProcessor", "androidx.room:room-compiler:$roomVersion")
+
 }

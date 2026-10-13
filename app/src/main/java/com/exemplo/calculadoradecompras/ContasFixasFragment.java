@@ -92,7 +92,7 @@ public class ContasFixasFragment extends Fragment {
         btnAddConta.setOnClickListener(v -> adicionarConta());
         btnExcConta.setOnClickListener(v -> excluirItensSelecionados());
 
-        // SALVAR: Gera o PDF real, avisa o usuário, limpa a tela e volta o cursor ao primeiro campo
+        // SALVAR: Gera o PDF padronizado idêntico ao Mercado, limpa a tela e volta o cursor ao primeiro campo
         btnSalvarContas.setOnClickListener(v -> salvarEGerarPDF());
 
         // ENVIAR: Partilha o PDF criado
@@ -155,8 +155,8 @@ public class ContasFixasFragment extends Fragment {
             return;
         }
 
-        // 1. Gera o arquivo PDF real
-        pdfGeradoFile = criarPDFNativo();
+        // 1. Gera o arquivo PDF com o layout exato padrão da aba Mercado
+        pdfGeradoFile = criarPDFPadronizado();
 
         if (pdfGeradoFile != null) {
             Toast.makeText(getContext(), "PDF de Contas Fixas gerado com sucesso!", Toast.LENGTH_SHORT).show();
@@ -174,7 +174,7 @@ public class ContasFixasFragment extends Fragment {
         entRendaContas.requestFocus();
     }
 
-    private File criarPDFNativo() {
+    private File criarPDFPadronizado() {
         PdfDocument document = new PdfDocument();
         PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create(); // Formato A4
         PdfDocument.Page page = document.startPage(pageInfo);
@@ -184,76 +184,74 @@ public class ContasFixasFragment extends Fragment {
 
         int y = 40;
 
-        // Cabeçalho / Título
-        paint.setColor(Color.parseColor("#505C71"));
-        canvas.drawRect(30, y, 565, y + 40, paint);
-
-        paint.setColor(Color.WHITE);
-        paint.setTextSize(18);
-        paint.setFakeBoldText(true);
-        canvas.drawText("RELATÓRIO DE CONTAS FIXAS", 160, y + 26, paint);
-
-        y += 60;
-
-        // Data
+        // Título Principal centralizado
         paint.setColor(Color.BLACK);
-        paint.setTextSize(12);
-        paint.setFakeBoldText(false);
-        canvas.drawText(lblDataContas.getText().toString(), 30, y, paint);
+        paint.setTextSize(20);
+        paint.setFakeBoldText(true);
+        canvas.drawText("RELATÓRIO DE CONTAS FIXAS", 150, y, paint);
 
         y += 20;
+        paint.setTextSize(12);
+        paint.setFakeBoldText(false);
+        String dataHoraStr = lblDataContas.getText().toString().replace("Data: ", "Data/Hora: ");
+        canvas.drawText(dataHoraStr, 170, y, paint);
 
-        // Renda
+        y += 35;
+
+        // Cabeçalho da Tabela (Fundo Azul igual ao Mercado: #2196F3 ou #1976D2)
+        paint.setColor(Color.parseColor("#2196F3"));
+        canvas.drawRect(40, y, 555, y + 30, paint);
+
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(13);
+        paint.setFakeBoldText(true);
+        canvas.drawText("Conta", 55, y + 20, paint);
+        canvas.drawText("Valor", 450, y + 20, paint);
+
+        y += 35;
+
+        // Itens da Tabela
+        paint.setFakeBoldText(false);
+        paint.setTextSize(12);
+        paint.setColor(Color.BLACK);
+
+        double totalContas = 0.0;
+        for (ContaItem item : listaContas) {
+            canvas.drawText(item.nome, 55, y, paint);
+            canvas.drawText(String.format(Locale.getDefault(), "R$ %.2f", item.valor), 450, y, paint);
+            totalContas += item.valor;
+            y += 25;
+        }
+
+        y += 15;
+        paint.setStrokeWidth(1);
+        paint.setColor(Color.LTGRAY);
+        canvas.drawLine(40, y, 555, y, paint);
+
+        y += 30;
+
+        // Bloco de Resumo (Renda Disponível, Total e Saldo Restante)
         double renda = 0.0;
         try {
             renda = Double.parseDouble(entRendaContas.getText().toString().trim().replace(",", "."));
         } catch (Exception ignored) {}
 
-        canvas.drawText(String.format(Locale.getDefault(), "Renda Disponível: R$ %.2f", renda), 30, y, paint);
+        double restante = renda - totalContas;
 
-        y += 30;
-
-        // Linha divisória
-        paint.setStrokeWidth(1);
-        paint.setColor(Color.GRAY);
-        canvas.drawLine(30, y, 565, y, paint);
-
-        y += 20;
-
-        // Lista de Contas
+        paint.setFakeBoldText(true);
+        paint.setTextSize(13);
         paint.setColor(Color.BLACK);
-        paint.setTextSize(12);
-        paint.setFakeBoldText(true);
-        canvas.drawText("CONTA", 30, y, paint);
-        canvas.drawText("VALOR", 480, y, paint);
-
-        y += 10;
-        canvas.drawLine(30, y, 565, y, paint);
+        canvas.drawText(String.format(Locale.getDefault(), "VALOR DISPONÍVEL: R$ %.2f", renda), 40, y, paint);
+        
         y += 20;
-
-        paint.setFakeBoldText(false);
-        double total = 0.0;
-        for (ContaItem item : listaContas) {
-            canvas.drawText(item.nome, 30, y, paint);
-            canvas.drawText(String.format(Locale.getDefault(), "R$ %.2f", item.valor), 480, y, paint);
-            total += item.valor;
-            y += 20;
-        }
-
-        y += 10;
-        canvas.drawLine(30, y, 565, y, paint);
-        y += 30;
-
-        // Resumo do Total e Restante
-        double restante = renda - total;
-        paint.setFakeBoldText(true);
-        paint.setTextSize(14);
-        paint.setColor(Color.parseColor("#008080")); // Tom Ciano/Teal para destaque
-        canvas.drawText(String.format(Locale.getDefault(), "Total Contas: R$ %.2f   |   Restante: R$ %.2f", total, restante), 30, y, paint);
+        canvas.drawText(String.format(Locale.getDefault(), "TOTAL CONTAS: R$ %.2f", totalContas), 40, y, paint);
+        
+        y += 20;
+        canvas.drawText(String.format(Locale.getDefault(), "SALDO RESTANTE: R$ %.2f", restante), 40, y, paint);
 
         document.finishPage(page);
 
-        // Salva o PDF na memória externa da aplicação
+        // Salva o PDF na pasta de documentos da app
         File file = new File(requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "ContasFixas.pdf");
         try {
             document.writeTo(new FileOutputStream(file));
@@ -261,7 +259,7 @@ public class ContasFixasFragment extends Fragment {
             return file;
         } catch (Exception e) {
             document.close();
-            Toast.makeText(getContext(), "Erro ao gerar arquivo PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), "Erro ao gerar PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return null;
         }
     }
@@ -320,7 +318,7 @@ public class ContasFixasFragment extends Fragment {
                     LinearLayout.LayoutParams.WRAP_CONTENT
             ));
             tvValor.setText(String.format(Locale.getDefault(), "R$ %.2f", item.valor));
-            tvValor.setTextColor(0xFF00FFFF);
+            tvValor.setTextColor(0xFF00FFFF); // Cor Ciano solicitada
             tvValor.setTextSize(16);
 
             row.addView(tvNome);

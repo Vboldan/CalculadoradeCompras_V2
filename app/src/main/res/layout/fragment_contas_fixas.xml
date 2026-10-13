@@ -1,19 +1,256 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#23272d"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:fillViewport="true">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Aba de Contas Fixas\n(Em desenvolvimento)"
-        android:textAlignment="center"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:padding="16dp">
 
-</LinearLayout>
+        <!-- Cabeçalho -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="#505c71"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="CONTAS FIXAS"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Data -->
+        <TextView
+            android:id="@+id/lblDataContas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+
+        <!-- Renda / Disponível -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:text="Renda R$:"
+                android:textColor="#FFFFFF" />
+
+            <EditText
+                android:id="@+id/entRendaContas"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00FFFF"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- Nome da Conta -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:text="Nome Conta:"
+                android:textColor="#FFFFFF" />
+
+            <EditText
+                android:id="@+id/entNomeConta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00FFFF"
+                android:imeOptions="actionNext"
+                android:inputType="textCapSentences"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- Valor e Vencimento -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:text="Valor R$:"
+                android:textColor="#FFFFFF" />
+
+            <EditText
+                android:id="@+id/entValorConta"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:backgroundTint="#00FFFF"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text=" Dia: "
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/entVencimentoConta"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00FFFF"
+                android:imeOptions="actionDone"
+                android:inputType="number"
+                android:selectAllOnFocus="true"
+                android:text="10"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- Botões de Ação -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:padding="2dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddConta"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1.2"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="2dp"
+                android:text="Adicionar"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                app:backgroundTint="#4A4E54"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExcConta"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="2dp"
+                android:text="Excluir"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                app:backgroundTint="#4A4E54"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSalvarContas"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="2dp"
+                android:text="Salvar"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                app:backgroundTint="#4A4E54"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEnviarContas"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="2dp"
+                android:text="Enviar"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                app:backgroundTint="#4A4E54"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- Status / Resumo -->
+        <TextView
+            android:id="@+id/lblStatusContas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Total Contas: R$0.00 | Restante: R$0.00"
+            android:textColor="#00ffff"
+            android:textSize="16sp" />
+
+        <!-- Container da Lista de Contas -->
+        <LinearLayout
+            android:id="@+id/boxListaContas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="4dp" />
+
+        <!-- Rodapé GitHub -->
+        <TextView
+            android:id="@+id/tvFooterContas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:alpha="0.7"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:padding="12dp"
+            android:text="Desenvolvido por Valdeci Boldan (GitHub)"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+</ScrollView>

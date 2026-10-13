@@ -1,4 +1,4 @@
-package com.vboldan.calculadoradecompras;
+package com.exemplo.calculadoradecompras;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,9 +11,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+// Importante: Importação explícita do R do seu pacote
+import com.exemplo.calculadoradecompras.R;
 
 public class ContasFixasFragment extends Fragment {
 
@@ -38,11 +42,11 @@ public class ContasFixasFragment extends Fragment {
         btnSalvarContas = view.findViewById(R.id.btnSalvarContas);
         btnEnviarContas = view.findViewById(R.id.btnEnviarContas);
 
-        // Insere a Data Atual no formato exato da aba Mercado (Ex: Data: 12/10/2026 - 23:34)
+        // Insere a Data Atual no topo (Ex: Data: 12/10/2026 - 23:34)
         SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
         lblDataContas.setText(sdf.format(new Date()));
 
-        // Ativa os botões com eventos de clique
+        // Ativa os eventos de clique dos botões
         btnAddConta.setOnClickListener(v -> {
             Toast.makeText(getContext(), "Adicionar conta clicado!", Toast.LENGTH_SHORT).show();
         });
@@ -56,7 +60,7 @@ public class ContasFixasFragment extends Fragment {
         });
 
         btnEnviarContas.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Enviar relatorio clicado!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Enviar relatório clicado!", Toast.LENGTH_SHORT).show();
         });
 
         return view;

@@ -144,7 +144,7 @@ public class MercadoFragment extends Fragment {
 
             TextView txtValor = new TextView(requireContext());
             txtValor.setText(String.format(Locale.getDefault(), "R$%.2f x %d = R$%.2f", preco, qtd, subtotal));
-            txtValor.setTextColor(Color.WHITE);
+            txtValor.setTextColor(0xFF00FFFF);
             txtValor.setTextSize(14);
             LinearLayout.LayoutParams paramsValor = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             txtValor.setLayoutParams(paramsValor);

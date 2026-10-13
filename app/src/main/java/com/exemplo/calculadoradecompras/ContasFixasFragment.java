@@ -1,8 +1,10 @@
 package com.exemplo.calculadoradecompras;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,14 +32,15 @@ public class ContasFixasFragment extends Fragment {
     private Button btnAddConta, btnExcConta, btnSalvarContas, btnEnviarContas;
     private LinearLayout boxListaContas;
 
-    // Estrutura interna para guardar as contas
     private static class ContaItem {
         String nome;
         double valor;
+        boolean selecionado;
 
         ContaItem(String nome, double valor) {
             this.nome = nome;
             this.valor = valor;
+            this.selecionado = false;
         }
     }
 
@@ -48,7 +51,6 @@ public class ContasFixasFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_contas_fixas, container, false);
 
-        // Mapear elementos do layout
         lblDataContas = view.findViewById(R.id.lblDataContas);
         lblStatusContas = view.findViewById(R.id.lblStatusContas);
         entRendaContas = view.findViewById(R.id.entRendaContas);
@@ -61,11 +63,11 @@ public class ContasFixasFragment extends Fragment {
         btnSalvarContas = view.findViewById(R.id.btnSalvarContas);
         btnEnviarContas = view.findViewById(R.id.btnEnviarContas);
 
-        // Preencher a Data Atual
+        // Preencher a Data Atual no topo
         SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
         lblDataContas.setText(sdf.format(new Date()));
 
-        // Atualizar cálculos se mudar a Renda
+        // Atualizar cálculos ao alterar a Renda
         entRendaContas.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -80,12 +82,22 @@ public class ContasFixasFragment extends Fragment {
         // Botão ADICIONAR
         btnAddConta.setOnClickListener(v -> adicionarConta());
 
-        // Botão EXCLUIR
-        btnExcConta.setOnClickListener(v -> removerUltimaConta());
+        // Botão EXCLUIR (Remove os itens selecionados por toque, igual ao Mercado)
+        btnExcConta.setOnClickListener(v -> excluirItensSelecionados());
 
         // Botão SALVAR
-        btnSalvarContas.setOnClickListener(v -> salvarContas());
+        btnSalvarContas.setOnClickListener(v -> {
+            if (listaContas.isEmpty()) {
+                Toast.makeText(getContext(), "Adicione contas antes de salvar", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Toast.makeText(getContext(), "Contas salvas com sucesso!", Toast.LENGTH_SHORT).show();
+        });
 
+        // Botão ENVIAR (Compartilha o relatório)
+        btnEnviarContas.setOnClickListener(v -> enviarRelatorio());
+
+        atualizarListaEStatus();
         return view;
     }
 
@@ -107,7 +119,6 @@ public class ContasFixasFragment extends Fragment {
             double valor = Double.parseDouble(valorStr.replace(",", "."));
             listaContas.add(new ContaItem(nome, valor));
 
-            // Limpa campos de entrada da conta
             entNomeConta.setText("");
             entValorConta.setText("");
             entNomeConta.requestFocus();
@@ -119,37 +130,82 @@ public class ContasFixasFragment extends Fragment {
         }
     }
 
-    private void removerUltimaConta() {
-        if (!listaContas.isEmpty()) {
-            listaContas.remove(listaContas.size() - 1);
-            atualizarListaEStatus();
-            Toast.makeText(getContext(), "Última conta removida", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getContext(), "Nenhuma conta para excluir", Toast.LENGTH_SHORT).show();
+    private void excluirItensSelecionados() {
+        List<ContaItem> paraRemover = new ArrayList<>();
+        for (ContaItem item : listaContas) {
+            if (item.selecionado) {
+                paraRemover.add(item);
+            }
         }
-    }
 
-    private void salvarContas() {
-        if (listaContas.isEmpty()) {
-            Toast.makeText(getContext(), "Nenhuma conta adicionada para salvar", Toast.LENGTH_SHORT).show();
+        if (paraRemover.isEmpty()) {
+            Toast.makeText(getContext(), "Toque em um item da lista para selecioná-lo antes de excluir", Toast.LENGTH_SHORT).show();
             return;
         }
-        Toast.makeText(getContext(), "Contas salvas com sucesso!", Toast.LENGTH_LONG).show();
+
+        listaContas.removeAll(paraRemover);
+        atualizarListaEStatus();
+        Toast.makeText(getContext(), "Itens selecionados excluídos", Toast.LENGTH_SHORT).show();
     }
 
     private void atualizarListaEStatus() {
         boxListaContas.removeAllViews();
 
-        for (ContaItem item : listaContas) {
-            TextView tv = new TextView(getContext());
-            tv.setText(String.format(Locale.getDefault(), "• %s - R$ %.2f", item.nome, item.valor));
-            tv.setTextColor(0xFFFFFFFF); // Branco
-            tv.setTextSize(15);
-            tv.setPadding(8, 8, 8, 8);
-            boxListaContas.addView(tv);
+        for (int i = 0; i < listaContas.size(); i++) {
+            final ContaItem item = listaContas.get(i);
+
+            // Layout da linha horizontal idêntico ao Mercado
+            LinearLayout row = new LinearLayout(getContext());
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            ));
+            row.setPadding(12, 14, 12, 14);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+
+            // Altera a cor de fundo se o item estiver selecionado por toque
+            if (item.selecionado) {
+                row.setBackgroundColor(0xFF505c71); // Tom cinza/azulado de destaque igual ao Mercado
+            } else {
+                row.setBackgroundColor(0x00000000); // Transparente
+            }
+
+            // Nome da Conta (à esquerda)
+            TextView tvNome = new TextView(getContext());
+            tvNome.setLayoutParams(new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f
+            ));
+            tvNome.setText(item.nome + ":");
+            tvNome.setTextColor(0xFFFFFFFF);
+            tvNome.setTextSize(16);
+
+            // Valor da Conta (à direita)
+            TextView tvValor = new TextView(getContext());
+            tvValor.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            ));
+            tvValor.setText(String.format(Locale.getDefault(), "R$ %.2f", item.valor));
+            tvValor.setTextColor(0xFF00FFFF);
+            tvValor.setTextSize(16);
+
+            row.addView(tvNome);
+            row.addView(tvValor);
+
+            // Ação de toque para selecionar/desselecionar o item (padrão da aba Mercado)
+            row.setOnClickListener(v -> {
+                item.selecionado = !item.selecionado;
+                atualizarListaEStatus();
+            });
+
+            boxListaContas.addView(row);
         }
 
         atualizarResumo();
+
+        // Ativa o botão Enviar apenas se houver contas na lista
+        btnEnviarContas.setEnabled(!listaContas.isEmpty());
     }
 
     private void atualizarResumo() {
@@ -169,6 +225,41 @@ public class ContasFixasFragment extends Fragment {
         double restante = renda - totalContas;
 
         lblStatusContas.setText(String.format(Locale.getDefault(),
-                "Total Contas: R$%.2f | Restante: R$%.2f", totalContas, restante));
+                "Total Contas: R$ %.2f | Restante: R$ %.2f", totalContas, restante));
+    }
+
+    private void enviarRelatorio() {
+        if (listaContas.isEmpty()) {
+            Toast.makeText(getContext(), "Nenhuma conta para enviar", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("📋 *RELATÓRIO DE CONTAS FIXAS*\n");
+        sb.append(lblDataContas.getText().toString()).append("\n\n");
+
+        double renda = 0.0;
+        try {
+            renda = Double.parseDouble(entRendaContas.getText().toString().trim().replace(",", "."));
+        } catch (Exception ignored) {}
+
+        sb.append(String.format(Locale.getDefault(), "Renda: R$ %.2f\n\n", renda));
+        sb.append("Contas:\n");
+
+        double total = 0.0;
+        for (ContaItem item : listaContas) {
+            sb.append(String.format(Locale.getDefault(), "• %s: R$ %.2f\n", item.nome, item.valor));
+            total += item.valor;
+        }
+
+        double restante = renda - total;
+        sb.append(String.format(Locale.getDefault(), "\nTotal Contas: R$ %.2f", total));
+        sb.append(String.format(Locale.getDefault(), "\nRestante: R$ %.2f", restante));
+
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Contas Fixas");
+        intent.putExtra(Intent.EXTRA_TEXT, sb.toString());
+        startActivity(Intent.createChooser(intent, "Enviar Relatório via"));
     }
 }

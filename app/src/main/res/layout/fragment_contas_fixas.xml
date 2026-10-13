@@ -36,7 +36,7 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Data -->
+        <!-- Data (Exibida no topo, idêntica ao Mercado) -->
         <TextView
             android:id="@+id/lblDataContas"
             android:layout_width="match_parent"
@@ -93,7 +93,7 @@
                 android:textColor="#FFFFFF" />
         </LinearLayout>
 
-        <!-- Valor e Vencimento -->
+        <!-- Valor R$ (Sem o campo 'Dia') -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -109,32 +109,11 @@
 
             <EditText
                 android:id="@+id/entValorConta"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="#00FFFF"
-                android:imeOptions="actionNext"
-                android:inputType="numberDecimal"
-                android:textColor="#FFFFFF" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text=" Dia: "
-                android:textColor="#FFFFFF"
-                android:textStyle="bold" />
-
-            <EditText
-                android:id="@+id/entVencimentoConta"
-                android:layout_width="50dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#00FFFF"
                 android:imeOptions="actionDone"
-                android:inputType="number"
-                android:selectAllOnFocus="true"
-                android:text="10"
-                android:textAlignment="center"
+                android:inputType="numberDecimal"
                 android:textColor="#FFFFFF" />
         </LinearLayout>
 
@@ -237,7 +216,7 @@
             android:orientation="vertical"
             android:padding="4dp" />
 
-        <!-- Rodapé GitHub -->
+        <!-- Rodapé -->
         <TextView
             android:id="@+id/tvFooterContas"
             android:layout_width="match_parent"

@@ -1,6 +1,10 @@
 package com.exemplo.calculadoradecompras;
 
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -50,6 +54,7 @@ public class ContasFixasFragment extends Fragment {
     }
 
     private final List<ContaItem> listaContas = new ArrayList<>();
+    private File pdfGeradoFile = null;
 
     @Nullable
     @Override
@@ -68,11 +73,11 @@ public class ContasFixasFragment extends Fragment {
         btnSalvarContas = view.findViewById(R.id.btnSalvarContas);
         btnEnviarContas = view.findViewById(R.id.btnEnviarContas);
 
-        // Preencher a Data Atual no topo
+        // Preencher Data no topo
         SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
         lblDataContas.setText(sdf.format(new Date()));
 
-        // Atualizar cálculos ao alterar a Renda
+        // Atualizar resumo ao alterar renda
         entRendaContas.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -84,17 +89,14 @@ public class ContasFixasFragment extends Fragment {
             public void afterTextChanged(Editable s) {}
         });
 
-        // Botão ADICIONAR
         btnAddConta.setOnClickListener(v -> adicionarConta());
-
-        // Botão EXCLUIR (Remove os itens selecionados por toque)
         btnExcConta.setOnClickListener(v -> excluirItensSelecionados());
 
-        // Botão SALVAR (Salva, limpa tudo e retorna o cursor para o campo inicial)
-        btnSalvarContas.setOnClickListener(v -> salvarE1Limpar());
+        // SALVAR: Gera o PDF real, avisa o usuário, limpa a tela e volta o cursor ao primeiro campo
+        btnSalvarContas.setOnClickListener(v -> salvarEGerarPDF());
 
-        // Botão ENVIAR (Gera e compartilha o PDF / Relatório)
-        btnEnviarContas.setOnClickListener(v -> gerarECompartilharPDF());
+        // ENVIAR: Partilha o PDF criado
+        btnEnviarContas.setOnClickListener(v -> compartilharPDF());
 
         atualizarListaEStatus();
         return view;
@@ -147,22 +149,140 @@ public class ContasFixasFragment extends Fragment {
         Toast.makeText(getContext(), "Itens selecionados excluídos", Toast.LENGTH_SHORT).show();
     }
 
-    private void salvarE1Limpar() {
+    private void salvarEGerarPDF() {
         if (listaContas.isEmpty()) {
             Toast.makeText(getContext(), "Nenhuma conta adicionada para salvar", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Aqui você pode armazenar no banco/preferências se necessário,
-        // limpando os dados e posicionando o cursor no primeiro campo
+        // 1. Gera o arquivo PDF real
+        pdfGeradoFile = criarPDFNativo();
+
+        if (pdfGeradoFile != null) {
+            Toast.makeText(getContext(), "PDF de Contas Fixas gerado com sucesso!", Toast.LENGTH_SHORT).show();
+            btnEnviarContas.setEnabled(true);
+        }
+
+        // 2. Limpa os dados e reseta a interface
         listaContas.clear();
         entRendaContas.setText("");
         entNomeConta.setText("");
         entValorConta.setText("");
         atualizarListaEStatus();
 
+        // 3. Foco de volta no primeiro campo
         entRendaContas.requestFocus();
-        Toast.makeText(getContext(), "Contas salvas e campos limpos com sucesso!", Toast.LENGTH_LONG).show();
+    }
+
+    private File criarPDFNativo() {
+        PdfDocument document = new PdfDocument();
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create(); // Formato A4
+        PdfDocument.Page page = document.startPage(pageInfo);
+
+        Canvas canvas = page.getCanvas();
+        Paint paint = new Paint();
+
+        int y = 40;
+
+        // Cabeçalho / Título
+        paint.setColor(Color.parseColor("#505C71"));
+        canvas.drawRect(30, y, 565, y + 40, paint);
+
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(18);
+        paint.setFakeBoldText(true);
+        canvas.drawText("RELATÓRIO DE CONTAS FIXAS", 160, y + 26, paint);
+
+        y += 60;
+
+        // Data
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(12);
+        paint.setFakeBoldText(false);
+        canvas.drawText(lblDataContas.getText().toString(), 30, y, paint);
+
+        y += 20;
+
+        // Renda
+        double renda = 0.0;
+        try {
+            renda = Double.parseDouble(entRendaContas.getText().toString().trim().replace(",", "."));
+        } catch (Exception ignored) {}
+
+        canvas.drawText(String.format(Locale.getDefault(), "Renda Disponível: R$ %.2f", renda), 30, y, paint);
+
+        y += 30;
+
+        // Linha divisória
+        paint.setStrokeWidth(1);
+        paint.setColor(Color.GRAY);
+        canvas.drawLine(30, y, 565, y, paint);
+
+        y += 20;
+
+        // Lista de Contas
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(12);
+        paint.setFakeBoldText(true);
+        canvas.drawText("CONTA", 30, y, paint);
+        canvas.drawText("VALOR", 480, y, paint);
+
+        y += 10;
+        canvas.drawLine(30, y, 565, y, paint);
+        y += 20;
+
+        paint.setFakeBoldText(false);
+        double total = 0.0;
+        for (ContaItem item : listaContas) {
+            canvas.drawText(item.nome, 30, y, paint);
+            canvas.drawText(String.format(Locale.getDefault(), "R$ %.2f", item.valor), 480, y, paint);
+            total += item.valor;
+            y += 20;
+        }
+
+        y += 10;
+        canvas.drawLine(30, y, 565, y, paint);
+        y += 30;
+
+        // Resumo do Total e Restante
+        double restante = renda - total;
+        paint.setFakeBoldText(true);
+        paint.setTextSize(14);
+        paint.setColor(Color.parseColor("#008080")); // Tom Ciano/Teal para destaque
+        canvas.drawText(String.format(Locale.getDefault(), "Total Contas: R$ %.2f   |   Restante: R$ %.2f", total, restante), 30, y, paint);
+
+        document.finishPage(page);
+
+        // Salva o PDF na memória externa da aplicação
+        File file = new File(requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "ContasFixas.pdf");
+        try {
+            document.writeTo(new FileOutputStream(file));
+            document.close();
+            return file;
+        } catch (Exception e) {
+            document.close();
+            Toast.makeText(getContext(), "Erro ao gerar arquivo PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            return null;
+        }
+    }
+
+    private void compartilharPDF() {
+        if (pdfGeradoFile == null || !pdfGeradoFile.exists()) {
+            Toast.makeText(getContext(), "Clique em Salvar para gerar o PDF antes de enviar", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            Uri uri = FileProvider.getUriForFile(requireContext(), requireContext().getPackageName() + ".fileprovider", pdfGeradoFile);
+
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("application/pdf");
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(intent, "Partilhar Relatório PDF"));
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Erro ao compartilhar PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void atualizarListaEStatus() {
@@ -200,7 +320,7 @@ public class ContasFixasFragment extends Fragment {
                     LinearLayout.LayoutParams.WRAP_CONTENT
             ));
             tvValor.setText(String.format(Locale.getDefault(), "R$ %.2f", item.valor));
-            tvValor.setTextColor(0xFF00FFFF); // Cor ciano solicitada
+            tvValor.setTextColor(0xFF00FFFF);
             tvValor.setTextSize(16);
 
             row.addView(tvNome);
@@ -215,7 +335,6 @@ public class ContasFixasFragment extends Fragment {
         }
 
         atualizarResumo();
-        btnEnviarContas.setEnabled(!listaContas.isEmpty());
     }
 
     private void atualizarResumo() {
@@ -236,55 +355,5 @@ public class ContasFixasFragment extends Fragment {
 
         lblStatusContas.setText(String.format(Locale.getDefault(),
                 "Total Contas: R$ %.2f | Restante: R$ %.2f", totalContas, restante));
-    }
-
-    private void gerarECompartilharPDF() {
-        if (listaContas.isEmpty()) {
-            Toast.makeText(getContext(), "Nenhuma conta para gerar PDF", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        try {
-            StringBuilder textoPdf = new StringBuilder();
-            textoPdf.append("RELATORIO DE CONTAS FIXAS\n");
-            textoPdf.append(lblDataContas.getText().toString()).append("\n\n");
-
-            double renda = 0.0;
-            try {
-                renda = Double.parseDouble(entRendaContas.getText().toString().trim().replace(",", "."));
-            } catch (Exception ignored) {}
-
-            textoPdf.append(String.format(Locale.getDefault(), "Renda: R$ %.2f\n\n", renda));
-            textoPdf.append("Lista de Contas:\n");
-
-            double total = 0.0;
-            for (ContaItem item : listaContas) {
-                textoPdf.append(String.format(Locale.getDefault(), "- %s: R$ %.2f\n", item.nome, item.valor));
-                total += item.valor;
-            }
-
-            double restante = renda - total;
-            textoPdf.append(String.format(Locale.getDefault(), "\nTotal Contas: R$ %.2f", total));
-            textoPdf.append(String.format(Locale.getDefault(), "\nRestante: R$ %.2f", restante));
-
-            // Criação do ficheiro PDF temporário
-            File pdfFile = new File(requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "ContasFixas.pdf");
-            
-            // Simples geração de texto encapsulado (ou gravação direta)
-            FileOutputStream fos = new FileOutputStream(pdfFile);
-            fos.write(textoPdf.toString().getBytes());
-            fos.close();
-
-            Uri uri = FileProvider.getUriForFile(requireContext(), requireContext().getPackageName() + ".fileprovider", pdfFile);
-
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("application/pdf");
-            intent.putExtra(Intent.EXTRA_STREAM, uri);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(intent, "Partilhar Relatório PDF"));
-
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "Erro ao gerar PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
     }
 }

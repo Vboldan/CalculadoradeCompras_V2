@@ -265,17 +265,18 @@ public class MercadoFragment extends Fragment {
 
         int y = 110;
 
-        Paint bgHeaderPaint = new Paint();
-        bgHeaderPaint.setColor(Color.parseColor("#3B88f4"));   # Cor do cabeçalho (azul)
-        bgHeaderPaint.setStyle(Paint.Style.FILL);
-        canvas.drawRect(40, y - 15, 520, y + 8, bgHeaderPaint);  # Retângulo de fundo do cabeçalho
+        // Cabeçalho da Tabela
+        paint.setColor(Color.parseColor("#3B88f4")); // Cor do cabeçalho (azul)
+        paint.setStyle(Paint.Style.FILL); 
+        canvas.drawRect(40, y - 15, 520, y + 8, paint); // Retângulo de fundo do cabeçalho
 
         paint.setColor(Color.WHITE);
+        paint.setTextSize(13);
         paint.setFakeBoldText(true);
-        canvas.drawText("Produto", 50, y, paint);
-        canvas.drawText("Preço", 250, y, paint);
-        canvas.drawText("Qtd", 350, y, paint);
-        canvas.drawText("Subtotal", 420, y, paint);
+        canvas.drawText("Produto", 55, y + 20, paint);
+        canvas.drawText("Preço", 250, y + 20, paint);
+        canvas.drawText("Qtd", 380, y + 20, paint);
+        canvas.drawText("Subtotal", 450, y + 20, paint);
 
         y += 25;
 

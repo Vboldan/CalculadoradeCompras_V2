@@ -1,6 +1,8 @@
 package com.exemplo.calculadoradecompras;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -92,7 +94,7 @@ public class ContasFixasFragment extends Fragment {
         btnAddConta.setOnClickListener(v -> adicionarConta());
         btnExcConta.setOnClickListener(v -> excluirItensSelecionados());
 
-        // SALVAR: Gera o PDF padronizado idêntico ao Mercado, limpa a tela e volta o cursor ao primeiro campo
+        // SALVAR: Gera o PDF padronizado, limpa a tela e volta o cursor ao primeiro campo
         btnSalvarContas.setOnClickListener(v -> salvarEGerarPDF());
 
         // ENVIAR: Partilha o PDF criado
@@ -155,7 +157,7 @@ public class ContasFixasFragment extends Fragment {
             return;
         }
 
-        // 1. Gera o arquivo PDF com o layout exato padrão da aba Mercado
+        // 1. Gera o arquivo PDF padronizado com marca d'água
         pdfGeradoFile = criarPDFPadronizado();
 
         if (pdfGeradoFile != null) {
@@ -181,23 +183,25 @@ public class ContasFixasFragment extends Fragment {
         Canvas canvas = page.getCanvas();
         Paint paint = new Paint();
 
-        int y = 40; # Posição inicial vertical para o conteúdo
+        int y = 40; // Posição inicial vertical para o conteúdo
 
         // --- MARCA D'ÁGUA ---
-        Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icone);
-        if (iconBitmap != null) {
-            int larguraDesejada = 350;
-            int alturaDesejada = 350;
-            Bitmap scaledIcon = Bitmap.createScaledBitmap(iconBitmap, larguraDesejada, alturaDesejada, true);
+        try {
+            Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icone);
+            if (iconBitmap != null) {
+                int larguraDesejada = 350;
+                int alturaDesejada = 350;
+                Bitmap scaledIcon = Bitmap.createScaledBitmap(iconBitmap, larguraDesejada, alturaDesejada, true);
 
-            Paint watermarkPaint = new Paint();
-            watermarkPaint.setAlpha(35);
+                Paint watermarkPaint = new Paint();
+                watermarkPaint.setAlpha(35);
 
-            int posX = (pageInfo.getPageWidth() - scaledIcon.getWidth()) / 2;
-            int posY = (pageInfo.getPageHeight() - scaledIcon.getHeight()) / 2;
+                int posX = (pageInfo.getPageWidth() - scaledIcon.getWidth()) / 2;
+                int posY = (pageInfo.getPageHeight() - scaledIcon.getHeight()) / 2;
 
-            canvas.drawBitmap(scaledIcon, posX, posY, watermarkPaint);
-        }
+                canvas.drawBitmap(scaledIcon, posX, posY, watermarkPaint);
+            }
+        } catch (Exception ignored) {}
 
         // Título Principal centralizado
         paint.setColor(Color.BLACK);
@@ -213,10 +217,10 @@ public class ContasFixasFragment extends Fragment {
 
         y += 35;
 
-        // Cabeçalho da Tabela (Fundo Azul igual ao Mercado: #2196F3 ou #1976D2)
-        paint.setColor(Color.parseColor("#3B88f4"));   # Cor do cabeçalho (azul)
+        // Cabeçalho da Tabela
+        paint.setColor(Color.parseColor("#3B88f4")); // Cor do cabeçalho (azul)
         paint.setStyle(Paint.Style.FILL); 
-        canvas.drawRect(40, y - 15, 520, y + 8, bgHeaderPaint);  # Retângulo de fundo do cabeçalho
+        canvas.drawRect(40, y - 15, 520, y + 8, paint); // Retângulo de fundo do cabeçalho
 
         paint.setColor(Color.WHITE);
         paint.setTextSize(13);

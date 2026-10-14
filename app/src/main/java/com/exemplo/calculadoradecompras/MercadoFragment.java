@@ -73,11 +73,9 @@ public class ContasFixasFragment extends Fragment {
         btnSalvarContas = view.findViewById(R.id.btnSalvarContas);
         btnEnviarContas = view.findViewById(R.id.btnEnviarContas);
 
-        // Preencher Data no topo
         SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
         lblDataContas.setText(sdf.format(new Date()));
 
-        // Atualizar resumo ao alterar renda
         entRendaContas.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -91,11 +89,7 @@ public class ContasFixasFragment extends Fragment {
 
         btnAddConta.setOnClickListener(v -> adicionarConta());
         btnExcConta.setOnClickListener(v -> excluirItensSelecionados());
-
-        // SALVAR: Gera o PDF padronizado, registra no banco Room, limpa a tela e foca no primeiro campo
         btnSalvarContas.setOnClickListener(v -> salvarEGerarPDF());
-
-        // ENVIAR: Partilha o PDF criado
         btnEnviarContas.setOnClickListener(v -> compartilharPDF());
 
         atualizarListaEStatus();
@@ -155,20 +149,17 @@ public class ContasFixasFragment extends Fragment {
             return;
         }
 
-        // 1. Calcula o total das contas
         double totalContas = 0.0;
         for (ContaItem item : listaContas) {
             totalContas += item.valor;
         }
 
-        // 2. Gera o arquivo PDF padronizado com marca d'água
         pdfGeradoFile = criarPDFPadronizado();
 
         if (pdfGeradoFile != null) {
             Toast.makeText(getContext(), "PDF de Contas Fixas gerado com sucesso!", Toast.LENGTH_SHORT).show();
             btnEnviarContas.setEnabled(true);
 
-            // 3. SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS ROOM (SEGURO EM BACKGROUND)
             String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
             final double finalTotal = totalContas;
             
@@ -179,27 +170,23 @@ public class ContasFixasFragment extends Fragment {
             }).start();
         }
 
-        // 4. Limpa os dados e reseta a interface
         listaContas.clear();
         entRendaContas.setText("");
         entNomeConta.setText("");
         entValorConta.setText("");
         atualizarListaEStatus();
-
-        // 5. Foco de volta no primeiro campo
         entRendaContas.requestFocus();
     }
 
     private File criarPDFPadronizado() {
         PdfDocument document = new PdfDocument();
-        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create(); // Formato A4
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create();
         PdfDocument.Page page = document.startPage(pageInfo);
         Canvas canvas = page.getCanvas();
         Paint paint = new Paint();
 
-        int y = 40; // Posição inicial vertical para o conteúdo
+        int y = 40;
 
-        // --- MARCA D'ÁGUA ---
         try {
             Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icone);
             if (iconBitmap != null) {
@@ -217,7 +204,6 @@ public class ContasFixasFragment extends Fragment {
             }
         } catch (Exception ignored) {}
 
-        // Título Principal centralizado
         paint.setColor(Color.BLACK);
         paint.setTextSize(20);
         paint.setFakeBoldText(true);
@@ -231,10 +217,9 @@ public class ContasFixasFragment extends Fragment {
 
         y += 35;
 
-        // Cabeçalho da Tabela
-        paint.setColor(Color.parseColor("#3B88f4")); // Cor do cabeçalho (azul)
+        paint.setColor(Color.parseColor("#3B88f4"));
         paint.setStyle(Paint.Style.FILL); 
-        canvas.drawRect(40, y - 15, 520, y + 8, paint); // Retângulo de fundo do cabeçalho
+        canvas.drawRect(40, y - 15, 520, y + 8, paint);
 
         paint.setColor(Color.WHITE);
         paint.setTextSize(13);
@@ -244,7 +229,6 @@ public class ContasFixasFragment extends Fragment {
 
         y += 35;
 
-        // Itens da Tabela
         paint.setFakeBoldText(false);
         paint.setTextSize(12);
         paint.setColor(Color.BLACK);
@@ -264,7 +248,6 @@ public class ContasFixasFragment extends Fragment {
 
         y += 30;
 
-        // Bloco de Resumo (Renda Disponível, Total e Saldo Restante)
         double renda = 0.0;
         try {
             renda = Double.parseDouble(entRendaContas.getText().toString().trim().replace(",", "."));
@@ -285,7 +268,6 @@ public class ContasFixasFragment extends Fragment {
 
         document.finishPage(page);
 
-        // Salva o PDF na pasta de documentos da app
         File file = new File(requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "ContasFixas.pdf");
         try {
             document.writeTo(new FileOutputStream(file));
@@ -313,7 +295,7 @@ public class ContasFixasFragment extends Fragment {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(Intent.createChooser(intent, "Partilhar Relatório PDF"));
         } catch (Exception e) {
-            Toast.makeText(getContext(), "Erro ao compartilhar PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), "Erro ao compartilhar PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

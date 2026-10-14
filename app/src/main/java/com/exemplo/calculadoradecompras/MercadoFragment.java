@@ -34,6 +34,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import com.exemplo.calculadoradecompras.R;
+
 public class ContasFixasFragment extends Fragment {
 
     private TextView lblDataContas, lblStatusContas;
@@ -73,23 +75,24 @@ public class ContasFixasFragment extends Fragment {
         btnSalvarContas = view.findViewById(R.id.btnSalvarContas);
         btnEnviarContas = view.findViewById(R.id.btnEnviarContas);
 
+        // Preencher Data no topo
         SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
         lblDataContas.setText(sdf.format(new Date()));
 
+        // Atualizar resumo ao alterar renda
         entRendaContas.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                atualizarResumo();
-            }
-            @Override
-            public void afterTextChanged(Editable s) {}
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { atualizarResumo(); }
+            @Override public void afterTextChanged(Editable s) {}
         });
 
         btnAddConta.setOnClickListener(v -> adicionarConta());
         btnExcConta.setOnClickListener(v -> excluirItensSelecionados());
+
+        // SALVAR: Gera o PDF padronizado, registra no banco Room, limpa a tela e foca no primeiro campo
         btnSalvarContas.setOnClickListener(v -> salvarEGerarPDF());
+
+        // ENVIAR: Partilha o PDF criado
         btnEnviarContas.setOnClickListener(v -> compartilharPDF());
 
         atualizarListaEStatus();
@@ -128,9 +131,7 @@ public class ContasFixasFragment extends Fragment {
     private void excluirItensSelecionados() {
         List<ContaItem> paraRemover = new ArrayList<>();
         for (ContaItem item : listaContas) {
-            if (item.selecionado) {
-                paraRemover.add(item);
-            }
+            if (item.selecionado) paraRemover.add(item);
         }
 
         if (paraRemover.isEmpty()) {
@@ -150,9 +151,7 @@ public class ContasFixasFragment extends Fragment {
         }
 
         double totalContas = 0.0;
-        for (ContaItem item : listaContas) {
-            totalContas += item.valor;
-        }
+        for (ContaItem item : listaContas) totalContas += item.valor;
 
         pdfGeradoFile = criarPDFPadronizado();
 
@@ -162,7 +161,7 @@ public class ContasFixasFragment extends Fragment {
 
             String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
             final double finalTotal = totalContas;
-            
+
             GastoEntity gastoConta = new GastoEntity(dataSalvar, "Contas Fixas", finalTotal, "Relatório de Contas Fixas");
 
             new Thread(() -> {
@@ -180,26 +179,22 @@ public class ContasFixasFragment extends Fragment {
 
     private File criarPDFPadronizado() {
         PdfDocument document = new PdfDocument();
-        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create();
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create(); // A4
         PdfDocument.Page page = document.startPage(pageInfo);
         Canvas canvas = page.getCanvas();
         Paint paint = new Paint();
 
         int y = 40;
 
+        // Marca d'água
         try {
             Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icone);
             if (iconBitmap != null) {
-                int larguraDesejada = 350;
-                int alturaDesejada = 350;
-                Bitmap scaledIcon = Bitmap.createScaledBitmap(iconBitmap, larguraDesejada, alturaDesejada, true);
-
+                Bitmap scaledIcon = Bitmap.createScaledBitmap(iconBitmap, 350, 350, true);
                 Paint watermarkPaint = new Paint();
                 watermarkPaint.setAlpha(35);
-
                 int posX = (pageInfo.getPageWidth() - scaledIcon.getWidth()) / 2;
                 int posY = (pageInfo.getPageHeight() - scaledIcon.getHeight()) / 2;
-
                 canvas.drawBitmap(scaledIcon, posX, posY, watermarkPaint);
             }
         } catch (Exception ignored) {}
@@ -218,7 +213,7 @@ public class ContasFixasFragment extends Fragment {
         y += 35;
 
         paint.setColor(Color.parseColor("#3B88f4"));
-        paint.setStyle(Paint.Style.FILL); 
+        paint.setStyle(Paint.Style.FILL);
         canvas.drawRect(40, y - 15, 520, y + 8, paint);
 
         paint.setColor(Color.WHITE);
@@ -259,10 +254,10 @@ public class ContasFixasFragment extends Fragment {
         paint.setTextSize(13);
         paint.setColor(Color.BLACK);
         canvas.drawText(String.format(Locale.getDefault(), "VALOR DISPONÍVEL: R$ %.2f", renda), 40, y, paint);
-        
+
         y += 20;
         canvas.drawText(String.format(Locale.getDefault(), "TOTAL CONTAS: R$ %.2f", totalContas), 40, y, paint);
-        
+
         y += 20;
         canvas.drawText(String.format(Locale.getDefault(), "SALDO RESTANTE: R$ %.2f", restante), 40, y, paint);
 

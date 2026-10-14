@@ -272,11 +272,11 @@ public class MercadoFragment extends Fragment {
 
         paint.setColor(Color.WHITE);
         paint.setTextSize(13);
-        paint.setFakeBoldText(true);
-        canvas.drawText("Produto", 55, y + 20, paint);
-        canvas.drawText("Preço", 250, y + 20, paint);
-        canvas.drawText("Qtd", 380, y + 20, paint);
-        canvas.drawText("Subtotal", 450, y + 20, paint);
+        paint.setFakeBoldText(true); 
+        canvas.drawText("Produto", 55, y + 4, paint);
+        canvas.drawText("Preço", 250, y + 4, paint);
+        canvas.drawText("Qtd", 380, y + 4, paint);
+        canvas.drawText("Subtotal", 450, y + 4, paint);
 
         y += 25;
 

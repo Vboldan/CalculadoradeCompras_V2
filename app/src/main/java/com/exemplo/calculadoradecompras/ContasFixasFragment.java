@@ -225,8 +225,8 @@ public class ContasFixasFragment extends Fragment {
         paint.setColor(Color.WHITE);
         paint.setTextSize(13);
         paint.setFakeBoldText(true);
-        canvas.drawText("Conta", 55, y + 20, paint);
-        canvas.drawText("Valor", 450, y + 20, paint);
+        canvas.drawText("Conta", 55, y + 4, paint);
+        canvas.drawText("Valor", 450, y + 4, paint);
 
         y += 35;
 

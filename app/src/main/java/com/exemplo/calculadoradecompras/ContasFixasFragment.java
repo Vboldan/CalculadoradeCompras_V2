@@ -178,11 +178,26 @@ public class ContasFixasFragment extends Fragment {
         PdfDocument document = new PdfDocument();
         PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create(); // Formato A4
         PdfDocument.Page page = document.startPage(pageInfo);
-
         Canvas canvas = page.getCanvas();
         Paint paint = new Paint();
 
-        int y = 40;
+        int y = 40; # Posição inicial vertical para o conteúdo
+
+        // --- MARCA D'ÁGUA ---
+        Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icone);
+        if (iconBitmap != null) {
+            int larguraDesejada = 350;
+            int alturaDesejada = 350;
+            Bitmap scaledIcon = Bitmap.createScaledBitmap(iconBitmap, larguraDesejada, alturaDesejada, true);
+
+            Paint watermarkPaint = new Paint();
+            watermarkPaint.setAlpha(35);
+
+            int posX = (pageInfo.getPageWidth() - scaledIcon.getWidth()) / 2;
+            int posY = (pageInfo.getPageHeight() - scaledIcon.getHeight()) / 2;
+
+            canvas.drawBitmap(scaledIcon, posX, posY, watermarkPaint);
+        }
 
         // Título Principal centralizado
         paint.setColor(Color.BLACK);
@@ -199,8 +214,9 @@ public class ContasFixasFragment extends Fragment {
         y += 35;
 
         // Cabeçalho da Tabela (Fundo Azul igual ao Mercado: #2196F3 ou #1976D2)
-        paint.setColor(Color.parseColor("#2196F3"));
-        canvas.drawRect(40, y, 555, y + 30, paint);
+        paint.setColor(Color.parseColor("#3B88f4"));   # Cor do cabeçalho (azul)
+        paint.setStyle(Paint.Style.FILL); 
+        canvas.drawRect(40, y - 15, 520, y + 8, bgHeaderPaint);  # Retângulo de fundo do cabeçalho
 
         paint.setColor(Color.WHITE);
         paint.setTextSize(13);

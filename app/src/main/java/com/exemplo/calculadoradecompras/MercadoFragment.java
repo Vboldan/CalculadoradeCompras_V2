@@ -266,9 +266,9 @@ public class MercadoFragment extends Fragment {
         int y = 110;
 
         Paint bgHeaderPaint = new Paint();
-        bgHeaderPaint.setColor(Color.parseColor("#3B88f4"));
+        bgHeaderPaint.setColor(Color.parseColor("#3B88f4"));   # Cor do cabeçalho (azul)
         bgHeaderPaint.setStyle(Paint.Style.FILL);
-        canvas.drawRect(40, y - 15, 520, y + 8, bgHeaderPaint);
+        canvas.drawRect(40, y - 15, 520, y + 8, bgHeaderPaint);  # Retângulo de fundo do cabeçalho
 
         paint.setColor(Color.WHITE);
         paint.setFakeBoldText(true);

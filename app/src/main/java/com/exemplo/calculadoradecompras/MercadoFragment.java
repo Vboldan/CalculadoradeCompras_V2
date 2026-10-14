@@ -34,8 +34,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import com.exemplo.calculadoradecompras.R;
-
 public class ContasFixasFragment extends Fragment {
 
     private TextView lblDataContas, lblStatusContas;
@@ -315,7 +313,7 @@ public class ContasFixasFragment extends Fragment {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(Intent.createChooser(intent, "Partilhar Relatório PDF"));
         } catch (Exception e) {
-            Toast.makeText(getContext(), "Erro ao compartilhar PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Erro ao compartilhar PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -354,7 +352,7 @@ public class ContasFixasFragment extends Fragment {
                     LinearLayout.LayoutParams.WRAP_CONTENT
             ));
             tvValor.setText(String.format(Locale.getDefault(), "R$ %.2f", item.valor));
-            tvValor.setTextColor(0xFF00FFFF); // Cor Ciano solicitada
+            tvValor.setTextColor(0xFF00FFFF);
             tvValor.setTextSize(16);
 
             row.addView(tvNome);

@@ -314,10 +314,13 @@ public class MercadoFragment extends Fragment {
             document.writeTo(new FileOutputStream(ultimoArquivoPdf));
             btnEnviar.setEnabled(true);
 
-            // --- SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS ROOM ---
-            String dataSalvar = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
+            // --- SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS ROOM (SEGURO EM BACKGROUND) ---
+            String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
             GastoEntity gastoMercado = new GastoEntity(dataSalvar, "Mercado", totalGasto, "Lista de Mercado Finalizada");
-            AppDatabase.getDatabase(requireContext()).gastoDao().inserir(gastoMercado);
+
+            new Thread(() -> {
+                AppDatabase.getDatabase(requireContext()).gastoDao().inserir(gastoMercado);
+            }).start();
 
             mostrarAlerta("Sucesso", "PDF salvo e registrado no Banco de Dados!\n" + ultimoArquivoPdf.getAbsolutePath());
 

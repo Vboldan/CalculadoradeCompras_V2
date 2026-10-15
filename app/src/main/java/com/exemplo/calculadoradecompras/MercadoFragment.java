@@ -309,23 +309,26 @@ public class MercadoFragment extends Fragment {
 
         File dir = requireContext().getExternalFilesDir(null);
         ultimoArquivoPdf = new File(dir, "lista_de_compras.pdf");
-
         try {
             document.writeTo(new FileOutputStream(ultimoArquivoPdf));
             btnEnviar.setEnabled(true);
 
-            // --- SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS ROOM (SEGURO EM BACKGROUND) ---
+            // --- SALVAMENTO ITEM POR ITEM NO BANCO DE DADOS ROOM ---
             String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
-            GastoEntity gastoMercado = new GastoEntity(dataSalvar, "Mercado", totalGasto, "Lista de Mercado Finalizada");
-
+            
             new Thread(() -> {
-                AppDatabase.getDatabase(requireContext()).gastoDao().inserir(gastoMercado);
+                GastoDao dao = AppDatabase.getDatabase(requireContext()).gastoDao();
+                for (Produto p : produtos) {
+                    String descItem = p.getNome() + " (Qtd: " + p.getQuantidade() + ")";
+                    GastoEntity g = new GastoEntity(dataSalvar, "Mercado", p.getSubtotal(), descItem);
+                    dao.inserir(g);
+                }
             }).start();
 
-            mostrarAlerta("Sucesso", "PDF salvo e registrado no Banco de Dados!\n" + ultimoArquivoPdf.getAbsolutePath());
+            mostrarAlerta("Sucesso", "PDF salvo e registrado item a item no Banco de Dados!\n" + ultimoArquivoPdf.getAbsolutePath());
 
             limparTudo();
-        } catch (IOException e) {
+        } catch (IOException e) {        
             mostrarAlerta("Erro", "Erro ao salvar PDF: " + e.getMessage());
         } finally {
             document.close();

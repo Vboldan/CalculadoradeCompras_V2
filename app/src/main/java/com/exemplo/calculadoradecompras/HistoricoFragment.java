@@ -69,9 +69,10 @@ public class HistoricoFragment extends Fragment {
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                     ));
-                    row.setPadding(16, 16, 16, 16);
+                    row.setPadding(16, 14, 16, 14);
                     row.setBackgroundColor(0xFF252525);
 
+                    // Linha superior: Categoria (Sem colchetes) e Data
                     LinearLayout topRow = new LinearLayout(getContext());
                     topRow.setOrientation(LinearLayout.HORIZONTAL);
                     topRow.setLayoutParams(new LinearLayout.LayoutParams(
@@ -81,20 +82,21 @@ public class HistoricoFragment extends Fragment {
 
                     TextView tvCategoria = new TextView(getContext());
                     tvCategoria.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
-                    tvCategoria.setText("[" + g.getCategoria() + "]");
+                    tvCategoria.setText(g.getCategoria()); // Sem colchetes
                     tvCategoria.setTextColor(0xFF00FFFF);
-                    tvCategoria.setTextSize(14);
+                    tvCategoria.setTextSize(13);
                     tvCategoria.setTypeface(null, android.graphics.Typeface.BOLD);
 
                     TextView tvData = new TextView(getContext());
                     tvData.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                     tvData.setText(g.getData());
                     tvData.setTextColor(Color.parseColor("#CCCCCC"));
-                    tvData.setTextSize(12);
+                    tvData.setTextSize(11);
 
                     topRow.addView(tvCategoria);
                     topRow.addView(tvData);
 
+                    // Nome do Item (Ex: Internet, Luz, Arroz)
                     TextView tvDescricao = new TextView(getContext());
                     tvDescricao.setLayoutParams(new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -102,25 +104,26 @@ public class HistoricoFragment extends Fragment {
                     ));
                     tvDescricao.setText(g.getDescricao());
                     tvDescricao.setTextColor(Color.WHITE);
-                    tvDescricao.setTextSize(13);
+                    tvDescricao.setTextSize(15);
+                    tvDescricao.setTypeface(null, android.graphics.Typeface.BOLD);
                     tvDescricao.setPadding(0, 4, 0, 4);
 
+                    // Valor Individual
                     TextView tvValor = new TextView(getContext());
                     tvValor.setLayoutParams(new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                     ));
-                    tvValor.setText(String.format(Locale.getDefault(), "Total: R$ %.2f", g.getValor()));
+                    tvValor.setText(String.format(Locale.getDefault(), "R$ %.2f", g.getValor()));
                     tvValor.setTextColor(0xFF00FF00);
-                    tvValor.setTextSize(15);
-                    tvValor.setTypeface(null, android.graphics.Typeface.BOLD);
+                    tvValor.setTextSize(14);
 
                     row.addView(topRow);
                     row.addView(tvDescricao);
                     row.addView(tvValor);
 
                     View separador = new View(getContext());
-                    LinearLayout.LayoutParams sepParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 8);
+                    LinearLayout.LayoutParams sepParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 6);
                     separador.setLayoutParams(sepParams);
 
                     boxListaHistorico.addView(row);

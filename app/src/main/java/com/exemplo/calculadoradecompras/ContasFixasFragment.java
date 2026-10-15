@@ -150,9 +150,6 @@ public class ContasFixasFragment extends Fragment {
             return;
         }
 
-        double totalContas = 0.0;
-        for (ContaItem item : listaContas) totalContas += item.valor;
-
         pdfGeradoFile = criarPDFPadronizado();
 
         if (pdfGeradoFile != null) {
@@ -160,12 +157,14 @@ public class ContasFixasFragment extends Fragment {
             btnEnviarContas.setEnabled(true);
 
             String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
-            final double finalTotal = totalContas;
-
-            GastoEntity gastoConta = new GastoEntity(dataSalvar, "Contas Fixas", finalTotal, "Relatório de Contas Fixas");
-
+            
+            // Salva cada conta individualmente no banco Room para análises futuras
             new Thread(() -> {
-                AppDatabase.getDatabase(requireContext()).gastoDao().inserir(gastoConta);
+                GastoDao dao = AppDatabase.getDatabase(requireContext()).gastoDao();
+                for (ContaItem item : listaContas) {
+                    GastoEntity g = new GastoEntity(dataSalvar, "Contas Fixas", item.valor, item.nome);
+                    dao.inserir(g);
+                }
             }).start();
         }
 

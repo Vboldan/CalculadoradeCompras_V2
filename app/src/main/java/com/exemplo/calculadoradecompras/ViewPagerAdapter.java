@@ -16,13 +16,15 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         if (position == 0) {
             return new MercadoFragment();
-        } else {
+        } else if (position == 1) {
             return new ContasFixasFragment();
+        } else {
+            return new HistoricoFragment();
         }
     }
 
     @Override
     public int getItemCount() {
-        return 2;
+        return 3;
     }
 }

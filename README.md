@@ -38,19 +38,26 @@ app/src/main/
     └── values/
         └── themes.xml
 
-        🔧 Como Executar o Projeto
+🔧 Como Executar o Projeto
+
 Clone o repositório:
+
+```bash
 git clone https://github.com/Vboldan/CalculadoradeCompras_V2.git
+cd CalculadoradeCompras_V2
+```
 
-Abra o projeto:
+Abra a pasta do projeto no Android Studio ou Visual Studio Code. Use o JDK 17 e instale a plataforma Android SDK 35.
 
-Importe a pasta no Android Studio ou Visual Studio Code.
+Para gerar o APK de depuração pela linha de comando:
 
-Compile e Execute:
+```bash
+./gradlew assembleDebug
+```
 
-Conecte um dispositivo físico via Depuração USB ou inicie um Emulador Android.
+O arquivo será gerado em `app/build/outputs/apk/debug/app-debug.apk`.
+
+Para instalar e executar o aplicativo, conecte um dispositivo físico com Depuração USB ativada ou inicie um emulador Android.
 
 📝 Licença
 Este projeto está sob a licença MIT.
-
-

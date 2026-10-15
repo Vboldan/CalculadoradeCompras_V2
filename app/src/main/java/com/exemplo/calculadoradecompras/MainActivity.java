@@ -25,9 +25,11 @@ public class MainActivity extends AppCompatActivity {
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             if (position == 0) {
                 tab.setText("Mercado");
-            } else {
+            } else if (position == 1) {
                 tab.setText("Contas Fixas");
+            } else {
+                tab.setText("Histórico");
             }
-        }).attach();
+        }).attach(); 
     }
 }

@@ -9,9 +9,6 @@ import android.graphics.Paint;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,349 +17,326 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import com.exemplo.calculadoradecompras.R;
+public class MercadoFragment extends Fragment {
 
-public class ContasFixasFragment extends Fragment {
+    private EditText entLimite, entProduto, entPreco, entQtd;
+    private TextView lblStatus, lblData;
+    private LinearLayout boxLista;
+    private Button btnEnviar;
 
-    private TextView lblDataContas, lblStatusContas;
-    private EditText entRendaContas, entNomeConta, entValorConta;
-    private Button btnAddConta, btnExcConta, btnSalvarContas, btnEnviarContas;
-    private LinearLayout boxListaContas;
-
-    private static class ContaItem {
-        String nome;
-        double valor;
-        boolean selecionado;
-
-        ContaItem(String nome, double valor) {
-            this.nome = nome;
-            this.valor = valor;
-            this.selecionado = false;
-        }
-    }
-
-    private final List<ContaItem> listaContas = new ArrayList<>();
-    private File pdfGeradoFile = null;
+    private double totalGasto = 0.0;
+    private List<Produto> produtos = new ArrayList<>();
+    private List<View> itensSelecionados = new ArrayList<>();
+    private File ultimoArquivoPdf = null;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_contas_fixas, container, false);
+        View view = inflater.inflate(R.layout.fragment_mercado, container, false);
 
-        lblDataContas = view.findViewById(R.id.lblDataContas);
-        lblStatusContas = view.findViewById(R.id.lblStatusContas);
-        entRendaContas = view.findViewById(R.id.entRendaContas);
-        entNomeConta = view.findViewById(R.id.entNomeConta);
-        entValorConta = view.findViewById(R.id.entValorConta);
-        boxListaContas = view.findViewById(R.id.boxListaContas);
+        entLimite = view.findViewById(R.id.entLimite);
+        entProduto = view.findViewById(R.id.entProduto);
+        entPreco = view.findViewById(R.id.entPreco);
+        entQtd = view.findViewById(R.id.entQtd);
+        lblStatus = view.findViewById(R.id.lblStatus);
+        lblData = view.findViewById(R.id.lblData);
+        boxLista = view.findViewById(R.id.boxLista);
+        btnEnviar = view.findViewById(R.id.btnEnviar);
 
-        btnAddConta = view.findViewById(R.id.btnAddConta);
-        btnExcConta = view.findViewById(R.id.btnExcConta);
-        btnSalvarContas = view.findViewById(R.id.btnSalvarContas);
-        btnEnviarContas = view.findViewById(R.id.btnEnviarContas);
+        String dataStr = new SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault()).format(new Date());
+        lblData.setText("Data: " + dataStr);
 
-        // Preencher Data no topo
-        SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
-        lblDataContas.setText(sdf.format(new Date()));
+        view.findViewById(R.id.btnAdd).setOnClickListener(v -> adicionarProduto());
+        view.findViewById(R.id.btnExc).setOnClickListener(v -> removerProduto());
+        view.findViewById(R.id.btnSalvar).setOnClickListener(v -> salvarPdf());
+        btnEnviar.setOnClickListener(v -> enviarPdf());
 
-        // Atualizar resumo ao alterar renda
-        entRendaContas.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { atualizarResumo(); }
-            @Override public void afterTextChanged(Editable s) {}
+        TextView tvFooter = view.findViewById(R.id.tvFooter);
+        tvFooter.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Vboldan/CalculadoradeCompras_V2"));
+            startActivity(intent);
         });
 
-        btnAddConta.setOnClickListener(v -> adicionarConta());
-        btnExcConta.setOnClickListener(v -> excluirItensSelecionados());
+        entLimite.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) atualizarStatus();
+        });
 
-        // SALVAR: Gera o PDF padronizado, registra no banco Room, limpa a tela e foca no primeiro campo
-        btnSalvarContas.setOnClickListener(v -> salvarEGerarPDF());
-
-        // ENVIAR: Partilha o PDF criado
-        btnEnviarContas.setOnClickListener(v -> compartilharPDF());
-
-        atualizarListaEStatus();
         return view;
     }
 
-    private void adicionarConta() {
-        String nome = entNomeConta.getText().toString().trim();
-        String valorStr = entValorConta.getText().toString().trim();
-
-        if (nome.isEmpty()) {
-            Toast.makeText(getContext(), "Informe o nome da conta", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (valorStr.isEmpty()) {
-            Toast.makeText(getContext(), "Informe o valor da conta", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+    private double obterLimite() {
         try {
-            double valor = Double.parseDouble(valorStr.replace(",", "."));
-            listaContas.add(new ContaItem(nome, valor));
-
-            entNomeConta.setText("");
-            entValorConta.setText("");
-            entNomeConta.requestFocus();
-
-            atualizarListaEStatus();
-            Toast.makeText(getContext(), "Conta adicionada!", Toast.LENGTH_SHORT).show();
+            String texto = entLimite.getText().toString().replace(",", ".");
+            return texto.isEmpty() ? 0.0 : Double.parseDouble(texto);
         } catch (NumberFormatException e) {
-            Toast.makeText(getContext(), "Valor inválido!", Toast.LENGTH_SHORT).show();
+            return 0.0;
         }
     }
 
-    private void excluirItensSelecionados() {
-        List<ContaItem> paraRemover = new ArrayList<>();
-        for (ContaItem item : listaContas) {
-            if (item.selecionado) paraRemover.add(item);
-        }
+    private void atualizarStatus() {
+        double limite = obterLimite();
+        double restante = limite - totalGasto;
+        lblStatus.setText(String.format(Locale.getDefault(), "Total: R$%.2f | Restante: R$%.2f", totalGasto, restante));
+    }
 
-        if (paraRemover.isEmpty()) {
-            Toast.makeText(getContext(), "Toque em um item da lista para selecioná-lo antes de excluir", Toast.LENGTH_SHORT).show();
+    private void adicionarProduto() {
+        double limite = obterLimite();
+        if (limite == 0.0) {
+            mostrarAlerta("Erro", "Digite o valor disponível!");
             return;
         }
 
-        listaContas.removeAll(paraRemover);
-        atualizarListaEStatus();
-        Toast.makeText(getContext(), "Itens selecionados excluídos", Toast.LENGTH_SHORT).show();
-    }
+        String nome = entProduto.getText().toString().trim();
+        String precoStr = entPreco.getText().toString().replace(",", ".");
+        String qtdStr = entQtd.getText().toString();
 
-    private void salvarEGerarPDF() {
-        if (listaContas.isEmpty()) {
-            Toast.makeText(getContext(), "Nenhuma conta adicionada para salvar", Toast.LENGTH_SHORT).show();
+        if (nome.isEmpty() || precoStr.isEmpty()) {
+            mostrarAlerta("Erro", "Preencha o produto e preço corretamente!");
             return;
         }
 
-        double totalContas = 0.0;
-        for (ContaItem item : listaContas) totalContas += item.valor;
-
-        pdfGeradoFile = criarPDFPadronizado();
-
-        if (pdfGeradoFile != null) {
-            Toast.makeText(getContext(), "PDF de Contas Fixas gerado com sucesso!", Toast.LENGTH_SHORT).show();
-            btnEnviarContas.setEnabled(true);
-
-            String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
-            final double finalTotal = totalContas;
-
-            GastoEntity gastoConta = new GastoEntity(dataSalvar, "Contas Fixas", finalTotal, "Relatório de Contas Fixas");
-
-            new Thread(() -> {
-                AppDatabase.getDatabase(requireContext()).gastoDao().inserir(gastoConta);
-            }).start();
-        }
-
-        listaContas.clear();
-        entRendaContas.setText("");
-        entNomeConta.setText("");
-        entValorConta.setText("");
-        atualizarListaEStatus();
-        entRendaContas.requestFocus();
-    }
-
-    private File criarPDFPadronizado() {
-        PdfDocument document = new PdfDocument();
-        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create(); // A4
-        PdfDocument.Page page = document.startPage(pageInfo);
-        Canvas canvas = page.getCanvas();
-        Paint paint = new Paint();
-
-        int y = 40;
-
-        // Marca d'água
         try {
-            Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icone);
-            if (iconBitmap != null) {
-                Bitmap scaledIcon = Bitmap.createScaledBitmap(iconBitmap, 350, 350, true);
-                Paint watermarkPaint = new Paint();
-                watermarkPaint.setAlpha(35);
-                int posX = (pageInfo.getPageWidth() - scaledIcon.getWidth()) / 2;
-                int posY = (pageInfo.getPageHeight() - scaledIcon.getHeight()) / 2;
-                canvas.drawBitmap(scaledIcon, posX, posY, watermarkPaint);
+            double preco = Double.parseDouble(precoStr);
+            int qtd = qtdStr.isEmpty() ? 1 : Integer.parseInt(qtdStr);
+            double subtotal = preco * qtd;
+
+            if (totalGasto + subtotal > limite) {
+                mostrarAlerta("Erro", "Ultrapassa o limite disponível!");
+                return;
             }
-        } catch (Exception ignored) {}
 
-        paint.setColor(Color.BLACK);
-        paint.setTextSize(20);
-        paint.setFakeBoldText(true);
-        canvas.drawText("RELATÓRIO DE CONTAS FIXAS", 150, y, paint);
+            totalGasto += subtotal;
+            Produto p = new Produto(nome, preco, qtd);
+            produtos.add(p);
 
-        y += 20;
-        paint.setTextSize(12);
-        paint.setFakeBoldText(false);
-        String dataHoraStr = lblDataContas.getText().toString().replace("Data: ", "Data/Hora: ");
-        canvas.drawText(dataHoraStr, 170, y, paint);
+            LinearLayout rowItem = new LinearLayout(requireContext());
+            rowItem.setOrientation(LinearLayout.HORIZONTAL);
+            rowItem.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            ));
+            rowItem.setPadding(24, 16, 24, 16);
+            rowItem.setTag(p);
 
-        y += 35;
+            TextView txtNome = new TextView(requireContext());
+            txtNome.setText(nome + ":");
+            txtNome.setTextColor(Color.WHITE);
+            txtNome.setTextSize(14);
+            LinearLayout.LayoutParams paramsNome = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+            txtNome.setLayoutParams(paramsNome);
+            txtNome.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
 
-        paint.setColor(Color.parseColor("#3B88f4"));
-        paint.setStyle(Paint.Style.FILL);
-        canvas.drawRect(40, y - 15, 520, y + 8, paint);
+            TextView txtValor = new TextView(requireContext());
+            txtValor.setText(String.format(Locale.getDefault(), "R$%.2f x %d = R$%.2f", preco, qtd, subtotal));
+            txtValor.setTextColor(0xFF00FFFF);
+            txtValor.setTextSize(14);
+            LinearLayout.LayoutParams paramsValor = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            txtValor.setLayoutParams(paramsValor);
+            txtValor.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
 
-        paint.setColor(Color.WHITE);
-        paint.setTextSize(13);
-        paint.setFakeBoldText(true);
-        canvas.drawText("Conta", 55, y + 4, paint);
-        canvas.drawText("Valor", 450, y + 4, paint);
+            rowItem.addView(txtNome);
+            rowItem.addView(txtValor);
 
-        y += 35;
+            rowItem.setOnClickListener(v -> {
+                if (itensSelecionados.contains(rowItem)) {
+                    itensSelecionados.remove(rowItem);
+                    rowItem.setBackgroundColor(Color.TRANSPARENT);
+                } else {
+                    itensSelecionados.add(rowItem);
+                    rowItem.setBackgroundColor(Color.DKGRAY);
+                }
+            });
 
-        paint.setFakeBoldText(false);
-        paint.setTextSize(12);
-        paint.setColor(Color.BLACK);
+            boxLista.addView(rowItem);
 
-        double totalContas = 0.0;
-        for (ContaItem item : listaContas) {
-            canvas.drawText(item.nome, 55, y, paint);
-            canvas.drawText(String.format(Locale.getDefault(), "R$ %.2f", item.valor), 450, y, paint);
-            totalContas += item.valor;
-            y += 25;
-        }
+            entProduto.setText("");
+            entPreco.setText("");
+            entQtd.setText("1");
+            entProduto.requestFocus();
 
-        y += 15;
-        paint.setStrokeWidth(1);
-        paint.setColor(Color.LTGRAY);
-        canvas.drawLine(40, y, 555, y, paint);
+            atualizarStatus();
 
-        y += 30;
-
-        double renda = 0.0;
-        try {
-            renda = Double.parseDouble(entRendaContas.getText().toString().trim().replace(",", "."));
-        } catch (Exception ignored) {}
-
-        double restante = renda - totalContas;
-
-        paint.setFakeBoldText(true);
-        paint.setTextSize(13);
-        paint.setColor(Color.BLACK);
-        canvas.drawText(String.format(Locale.getDefault(), "VALOR DISPONÍVEL: R$ %.2f", renda), 40, y, paint);
-
-        y += 20;
-        canvas.drawText(String.format(Locale.getDefault(), "TOTAL CONTAS: R$ %.2f", totalContas), 40, y, paint);
-
-        y += 20;
-        canvas.drawText(String.format(Locale.getDefault(), "SALDO RESTANTE: R$ %.2f", restante), 40, y, paint);
-
-        document.finishPage(page);
-
-        File file = new File(requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "ContasFixas.pdf");
-        try {
-            document.writeTo(new FileOutputStream(file));
-            document.close();
-            return file;
-        } catch (Exception e) {
-            document.close();
-            Toast.makeText(getContext(), "Erro ao gerar PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            return null;
+        } catch (NumberFormatException e) {
+            mostrarAlerta("Erro", "Valores numéricos inválidos!");
         }
     }
 
-    private void compartilharPDF() {
-        if (pdfGeradoFile == null || !pdfGeradoFile.exists()) {
-            Toast.makeText(getContext(), "Clique em Salvar para gerar o PDF antes de enviar", Toast.LENGTH_SHORT).show();
+    private void removerProduto() {
+        if (itensSelecionados.isEmpty()) {
+            mostrarAlerta("Aviso", "Selecione um ou mais itens para excluir!");
+            return;
+        }
+
+        for (View v : itensSelecionados) {
+            Produto p = (Produto) v.getTag();
+            produtos.remove(p);
+            totalGasto -= p.getSubtotal();
+            boxLista.removeView(v);
+        }
+        itensSelecionados.clear();
+        atualizarStatus();
+    }
+
+    private void limparTudo() {
+        produtos.clear();
+        itensSelecionados.clear();
+        boxLista.removeAllViews();
+        totalGasto = 0.0;
+
+        entLimite.setText("");
+        entProduto.setText("");
+        entPreco.setText("");
+        entQtd.setText("1");
+
+        atualizarStatus();
+        entLimite.requestFocus();
+    }
+
+    private void enviarPdf() {
+        if (ultimoArquivoPdf == null || !ultimoArquivoPdf.exists()) {
+            mostrarAlerta("Erro", "Arquivo PDF não encontrado. Salve primeiro.");
             return;
         }
 
         try {
-            Uri uri = FileProvider.getUriForFile(requireContext(), requireContext().getPackageName() + ".fileprovider", pdfGeradoFile);
-
+            Uri uri = FileProvider.getUriForFile(requireContext(), requireContext().getPackageName() + ".fileprovider", ultimoArquivoPdf);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("application/pdf");
             intent.putExtra(Intent.EXTRA_STREAM, uri);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(intent, "Partilhar Relatório PDF"));
+            startActivity(Intent.createChooser(intent, "Compartilhar Lista de Compras"));
         } catch (Exception e) {
-            Toast.makeText(getContext(), "Erro ao compartilhar PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            mostrarAlerta("Erro", "Erro ao compartilhar: " + e.getMessage());
         }
     }
 
-    private void atualizarListaEStatus() {
-        boxListaContas.removeAllViews();
-
-        for (int i = 0; i < listaContas.size(); i++) {
-            final ContaItem item = listaContas.get(i);
-
-            LinearLayout row = new LinearLayout(getContext());
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            ));
-            row.setPadding(12, 14, 12, 14);
-            row.setGravity(Gravity.CENTER_VERTICAL);
-
-            if (item.selecionado) {
-                row.setBackgroundColor(0xFF505c71);
-            } else {
-                row.setBackgroundColor(0x00000000);
-            }
-
-            TextView tvNome = new TextView(getContext());
-            tvNome.setLayoutParams(new LinearLayout.LayoutParams(
-                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f
-            ));
-            tvNome.setText(item.nome + ":");
-            tvNome.setTextColor(0xFFFFFFFF);
-            tvNome.setTextSize(16);
-
-            TextView tvValor = new TextView(getContext());
-            tvValor.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            ));
-            tvValor.setText(String.format(Locale.getDefault(), "R$ %.2f", item.valor));
-            tvValor.setTextColor(0xFF00FFFF);
-            tvValor.setTextSize(16);
-
-            row.addView(tvNome);
-            row.addView(tvValor);
-
-            row.setOnClickListener(v -> {
-                item.selecionado = !item.selecionado;
-                atualizarListaEStatus();
-            });
-
-            boxListaContas.addView(row);
+    private void salvarPdf() {
+        if (produtos.isEmpty()) {
+            mostrarAlerta("Aviso", "Nenhum produto na lista!");
+            return;
         }
 
-        atualizarResumo();
+        PdfDocument document = new PdfDocument();
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create();
+        PdfDocument.Page page = document.startPage(pageInfo);
+        Canvas canvas = page.getCanvas();
+        Paint paint = new Paint();
+
+        // --- MARCA D'ÁGUA ---
+        Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icone);
+        if (iconBitmap != null) {
+            int larguraDesejada = 350;
+            int alturaDesejada = 350;
+            Bitmap scaledIcon = Bitmap.createScaledBitmap(iconBitmap, larguraDesejada, alturaDesejada, true);
+
+            Paint watermarkPaint = new Paint();
+            watermarkPaint.setAlpha(35);
+
+            int posX = (pageInfo.getPageWidth() - scaledIcon.getWidth()) / 2;
+            int posY = (pageInfo.getPageHeight() - scaledIcon.getHeight()) / 2;
+
+            canvas.drawBitmap(scaledIcon, posX, posY, watermarkPaint);
+        }
+
+        paint.setTextSize(18);
+        paint.setFakeBoldText(true);
+        canvas.drawText("NOTA DE COMPRA", 220, 50, paint);
+
+        paint.setTextSize(12);
+        paint.setFakeBoldText(false);
+        String dataStr = new SimpleDateFormat("dd/MM/yyyy - HH:mm:ss", Locale.getDefault()).format(new Date());
+        canvas.drawText("Data/Hora: " + dataStr, 220, 70, paint);
+
+        int y = 110;
+
+        // Cabeçalho da Tabela
+        paint.setColor(Color.parseColor("#3B88f4")); // Cor do cabeçalho (azul)
+        paint.setStyle(Paint.Style.FILL);
+        canvas.drawRect(40, y - 15, 520, y + 8, paint); // Retângulo de fundo do cabeçalho
+
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(13);
+        paint.setFakeBoldText(true);
+        canvas.drawText("Produto", 55, y + 4, paint);
+        canvas.drawText("Preço", 250, y + 4, paint);
+        canvas.drawText("Qtd", 380, y + 4, paint);
+        canvas.drawText("Subtotal", 450, y + 4, paint);
+
+        y += 25;
+
+        paint.setColor(Color.BLACK);
+        paint.setFakeBoldText(false);
+
+        Produto maisCaro = produtos.get(0);
+
+        for (Produto p : produtos) {
+            if (p.getPreco() > maisCaro.getPreco()) maisCaro = p;
+            canvas.drawText(p.getNome(), 50, y, paint);
+            canvas.drawText(String.format(Locale.getDefault(), "R$ %.2f", p.getPreco()), 250, y, paint);
+            canvas.drawText(String.valueOf(p.getQuantidade()), 350, y, paint);
+            canvas.drawText(String.format(Locale.getDefault(), "R$ %.2f", p.getSubtotal()), 420, y, paint);
+            y += 20;
+        }
+
+        y += 30;
+        paint.setFakeBoldText(true);
+        canvas.drawText(String.format(Locale.getDefault(), "VALOR DISPONÍVEL: R$ %.2f", obterLimite()), 50, y, paint);
+        y += 20;
+        paint.setFakeBoldText(false);
+        canvas.drawText(String.format(Locale.getDefault(), "TOTAL GASTO: R$ %.2f", totalGasto), 50, y, paint);
+        y += 20;
+        canvas.drawText(String.format(Locale.getDefault(), "SALDO RESTANTE: R$ %.2f", obterLimite() - totalGasto), 50, y, paint);
+        y += 20;
+        canvas.drawText(String.format(Locale.getDefault(), "PRODUTO MAIS CARO: %s (R$ %.2f)", maisCaro.getNome(), maisCaro.getPreco()), 50, y, paint);
+
+        document.finishPage(page);
+
+        File dir = requireContext().getExternalFilesDir(null);
+        ultimoArquivoPdf = new File(dir, "lista_de_compras.pdf");
+
+        try {
+            document.writeTo(new FileOutputStream(ultimoArquivoPdf));
+            btnEnviar.setEnabled(true);
+
+            // --- SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS ROOM (SEGURO EM BACKGROUND) ---
+            String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
+            GastoEntity gastoMercado = new GastoEntity(dataSalvar, "Mercado", totalGasto, "Lista de Mercado Finalizada");
+
+            new Thread(() -> {
+                AppDatabase.getDatabase(requireContext()).gastoDao().inserir(gastoMercado);
+            }).start();
+
+            mostrarAlerta("Sucesso", "PDF salvo e registrado no Banco de Dados!\n" + ultimoArquivoPdf.getAbsolutePath());
+
+            limparTudo();
+        } catch (IOException e) {
+            mostrarAlerta("Erro", "Erro ao salvar PDF: " + e.getMessage());
+        } finally {
+            document.close();
+        }
     }
 
-    private void atualizarResumo() {
-        double renda = 0.0;
-        String rendaStr = entRendaContas.getText().toString().trim();
-        if (!rendaStr.isEmpty()) {
-            try {
-                renda = Double.parseDouble(rendaStr.replace(",", "."));
-            } catch (NumberFormatException ignored) {}
-        }
-
-        double totalContas = 0.0;
-        for (ContaItem item : listaContas) {
-            totalContas += item.valor;
-        }
-
-        double restante = renda - totalContas;
-
-        lblStatusContas.setText(String.format(Locale.getDefault(),
-                "Total Contas: R$ %.2f | Restante: R$ %.2f", totalContas, restante));
+    private void mostrarAlerta(String titulo, String mensagem) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(titulo)
+                .setMessage(mensagem)
+                .setPositiveButton("OK", null)
+                .show();
     }
 }

@@ -89,7 +89,7 @@ public class HistoricoFragment extends Fragment {
                     TextView tvData = new TextView(getContext());
                     tvData.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                     tvData.setText(g.getData());
-                    tvData.setTextColor(Color.LIGHTGRAY);
+                    tvData.setTextColor(Color.parseColor("#CCCCCC"));
                     tvData.setTextSize(12);
 
                     topRow.addView(tvCategoria);

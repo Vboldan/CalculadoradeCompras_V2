@@ -34,8 +34,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import com.exemplo.calculadoradecompras.R;
-
 public class ContasFixasFragment extends Fragment {
 
     private TextView lblDataContas, lblStatusContas;
@@ -75,24 +73,19 @@ public class ContasFixasFragment extends Fragment {
         btnSalvarContas = view.findViewById(R.id.btnSalvarContas);
         btnEnviarContas = view.findViewById(R.id.btnEnviarContas);
 
-        // Preencher Data no topo
         SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
         lblDataContas.setText(sdf.format(new Date()));
 
-        // Atualizar resumo ao alterar renda
+        // CORREÇÃO DO CURSOR: Usa afterTextChanged para evitar perda de foco durante a digitação
         entRendaContas.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { atualizarResumo(); }
-            @Override public void afterTextChanged(Editable s) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) { atualizarResumo(); }
         });
 
         btnAddConta.setOnClickListener(v -> adicionarConta());
         btnExcConta.setOnClickListener(v -> excluirItensSelecionados());
-
-        // SALVAR: Gera o PDF padronizado, registra no banco Room, limpa a tela e foca no primeiro campo
         btnSalvarContas.setOnClickListener(v -> salvarEGerarPDF());
-
-        // ENVIAR: Partilha o PDF criado
         btnEnviarContas.setOnClickListener(v -> compartilharPDF());
 
         atualizarListaEStatus();
@@ -158,10 +151,12 @@ public class ContasFixasFragment extends Fragment {
 
             String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
             
-            // Salva cada conta individualmente no banco Room para análises futuras
+            // CORREÇÃO DO HISTÓRICO: Faz uma cópia segura dos itens antes de limpar a lista
+            List<ContaItem> contasParaSalvar = new ArrayList<>(listaContas);
+
             new Thread(() -> {
                 GastoDao dao = AppDatabase.getDatabase(requireContext()).gastoDao();
-                for (ContaItem item : listaContas) {
+                for (ContaItem item : contasParaSalvar) {
                     GastoEntity g = new GastoEntity(dataSalvar, "Contas Fixas", item.valor, item.nome);
                     dao.inserir(g);
                 }
@@ -178,7 +173,7 @@ public class ContasFixasFragment extends Fragment {
 
     private File criarPDFPadronizado() {
         PdfDocument document = new PdfDocument();
-        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create(); // A4
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create();
         PdfDocument.Page page = document.startPage(pageInfo);
         Canvas canvas = page.getCanvas();
         Paint paint = new Paint();
@@ -281,7 +276,6 @@ public class ContasFixasFragment extends Fragment {
 
         try {
             Uri uri = FileProvider.getUriForFile(requireContext(), requireContext().getPackageName() + ".fileprovider", pdfGeradoFile);
-
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("application/pdf");
             intent.putExtra(Intent.EXTRA_STREAM, uri);

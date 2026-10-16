@@ -17,10 +17,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
@@ -98,7 +98,7 @@ public class MercadoFragment extends Fragment {
     private void adicionarProduto() {
         double limite = obterLimite();
         if (limite == 0.0) {
-            mostrarAlerta("Erro", "Digite o valor disponível!");
+            Toast.makeText(getContext(), "Digite o valor disponível!", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -107,7 +107,7 @@ public class MercadoFragment extends Fragment {
         String qtdStr = entQtd.getText().toString();
 
         if (nome.isEmpty() || precoStr.isEmpty()) {
-            mostrarAlerta("Erro", "Preencha o produto e preço corretamente!");
+            Toast.makeText(getContext(), "Preencha o produto e preço corretamente!", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -117,7 +117,7 @@ public class MercadoFragment extends Fragment {
             double subtotal = preco * qtd;
 
             if (totalGasto + subtotal > limite) {
-                mostrarAlerta("Erro", "Ultrapassa o limite disponível!");
+                Toast.makeText(getContext(), "Ultrapassa o limite disponível!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -171,15 +171,16 @@ public class MercadoFragment extends Fragment {
             entProduto.requestFocus();
 
             atualizarStatus();
+            Toast.makeText(getContext(), "Produto adicionado!", Toast.LENGTH_SHORT).show();
 
         } catch (NumberFormatException e) {
-            mostrarAlerta("Erro", "Valores numéricos inválidos!");
+            Toast.makeText(getContext(), "Valores numéricos inválidos!", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void removerProduto() {
         if (itensSelecionados.isEmpty()) {
-            mostrarAlerta("Aviso", "Selecione um ou mais itens para excluir!");
+            Toast.makeText(getContext(), "Selecione um ou mais itens para excluir!", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -191,6 +192,7 @@ public class MercadoFragment extends Fragment {
         }
         itensSelecionados.clear();
         atualizarStatus();
+        Toast.makeText(getContext(), "Itens removidos!", Toast.LENGTH_SHORT).show();
     }
 
     private void limparTudo() {
@@ -210,7 +212,7 @@ public class MercadoFragment extends Fragment {
 
     private void enviarPdf() {
         if (ultimoArquivoPdf == null || !ultimoArquivoPdf.exists()) {
-            mostrarAlerta("Erro", "Arquivo PDF não encontrado. Salve primeiro.");
+            Toast.makeText(getContext(), "Arquivo PDF não encontrado. Salve primeiro.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -222,13 +224,13 @@ public class MercadoFragment extends Fragment {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(Intent.createChooser(intent, "Compartilhar Lista de Compras"));
         } catch (Exception e) {
-            mostrarAlerta("Erro", "Erro ao compartilhar: " + e.getMessage());
+            Toast.makeText(getContext(), "Erro ao compartilhar: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void salvarPdf() {
         if (produtos.isEmpty()) {
-            mostrarAlerta("Aviso", "Nenhum produto na lista!");
+            Toast.makeText(getContext(), "Nenhum produto na lista!", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -238,7 +240,6 @@ public class MercadoFragment extends Fragment {
         Canvas canvas = page.getCanvas();
         Paint paint = new Paint();
 
-        // --- MARCA D'ÁGUA ---
         Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.icone);
         if (iconBitmap != null) {
             int larguraDesejada = 350;
@@ -265,10 +266,9 @@ public class MercadoFragment extends Fragment {
 
         int y = 110;
 
-        // Cabeçalho da Tabela
-        paint.setColor(Color.parseColor("#3B88f4")); // Cor do cabeçalho (azul)
+        paint.setColor(Color.parseColor("#3B88f4"));
         paint.setStyle(Paint.Style.FILL);
-        canvas.drawRect(40, y - 15, 520, y + 8, paint); // Retângulo de fundo do cabeçalho
+        canvas.drawRect(40, y - 15, 520, y + 8, paint);
 
         paint.setColor(Color.WHITE);
         paint.setTextSize(13);
@@ -309,11 +309,11 @@ public class MercadoFragment extends Fragment {
 
         File dir = requireContext().getExternalFilesDir(null);
         ultimoArquivoPdf = new File(dir, "lista_de_compras.pdf");
+
         try {
             document.writeTo(new FileOutputStream(ultimoArquivoPdf));
             btnEnviar.setEnabled(true);
 
-            // --- SALVAMENTO ITEM POR ITEM NO BANCO DE DADOS ROOM ---
             String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
             
             new Thread(() -> {
@@ -325,21 +325,13 @@ public class MercadoFragment extends Fragment {
                 }
             }).start();
 
-            mostrarAlerta("Sucesso", "PDF salvo e registrado item a item no Banco de Dados!\n" + ultimoArquivoPdf.getAbsolutePath());
+            Toast.makeText(getContext(), "PDF salvo e registrado no Histórico com sucesso!", Toast.LENGTH_LONG).show();
 
             limparTudo();
-        } catch (IOException e) {        
-            mostrarAlerta("Erro", "Erro ao salvar PDF: " + e.getMessage());
+        } catch (IOException e) {
+            Toast.makeText(getContext(), "Erro ao salvar PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
         } finally {
             document.close();
         }
-    }
-
-    private void mostrarAlerta(String titulo, String mensagem) {
-        new AlertDialog.Builder(requireContext())
-                .setTitle(titulo)
-                .setMessage(mensagem)
-                .setPositiveButton("OK", null)
-                .show();
     }
 }

@@ -1,4 +1,4 @@
-package com.exemplo.calculadoradecompras;
+    package com.exemplo.calculadoradecompras;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -10,8 +10,6 @@ import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -76,11 +74,9 @@ public class ContasFixasFragment extends Fragment {
         SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
         lblDataContas.setText(sdf.format(new Date()));
 
-        // CORREÇÃO DO CURSOR: Usa afterTextChanged para evitar perda de foco durante a digitação
-        entRendaContas.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(Editable s) { atualizarResumo(); }
+        // PADRONIZAÇÃO IDÊNTICA AO MERCADO: Atualiza o status apenas ao perder o foco do campo de renda
+        entRendaContas.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) atualizarResumo();
         });
 
         btnAddConta.setOnClickListener(v -> adicionarConta());
@@ -150,8 +146,6 @@ public class ContasFixasFragment extends Fragment {
             btnEnviarContas.setEnabled(true);
 
             String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
-            
-            // CORREÇÃO DO HISTÓRICO: Faz uma cópia segura dos itens antes de limpar a lista
             List<ContaItem> contasParaSalvar = new ArrayList<>(listaContas);
 
             new Thread(() -> {

@@ -1,5 +1,6 @@
-    package com.exemplo.calculadoradecompras;
+package com.exemplo.calculadoradecompras;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,6 +15,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -74,7 +76,6 @@ public class ContasFixasFragment extends Fragment {
         SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
         lblDataContas.setText(sdf.format(new Date()));
 
-        // PADRONIZAÇÃO IDÊNTICA AO MERCADO: Atualiza o status apenas ao perder o foco do campo de renda
         entRendaContas.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) atualizarResumo();
         });
@@ -86,6 +87,21 @@ public class ContasFixasFragment extends Fragment {
 
         atualizarListaEStatus();
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Garante que o cursor fique visível no campo de Renda assim que a aba for aberta
+        entRendaContas.postDelayed(() -> {
+            if (entRendaContas != null && isAdded()) {
+                entRendaContas.requestFocus();
+                InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.showSoftInput(entRendaContas, InputMethodManager.SHOW_IMPLICIT);
+                }
+            }
+        }, 200);
     }
 
     private void adicionarConta() {
@@ -108,6 +124,8 @@ public class ContasFixasFragment extends Fragment {
 
             entNomeConta.setText("");
             entValorConta.setText("");
+            
+            // Retorna o cursor para o Nome da Conta para continuar digitando a próxima conta sem falha
             entNomeConta.requestFocus();
 
             atualizarListaEStatus();

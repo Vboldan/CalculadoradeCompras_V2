@@ -18,6 +18,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Context;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -78,6 +80,22 @@ public class MercadoFragment extends Fragment {
         });
 
         return view;
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Garante que o cursor e o teclado fiquem visíveis no campo do Limite assim que a aba Mercado for aberta
+        if (entLimite != null) {
+            entLimite.postDelayed(() -> {
+                if (entLimite != null && isAdded()) {
+                    entLimite.requestFocus();
+                    InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.showSoftInput(entLimite, InputMethodManager.SHOW_IMPLICIT);
+                    }
+                }
+            }, 200);
+        }
     }
 
     private double obterLimite() {

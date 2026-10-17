@@ -65,6 +65,8 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#00FFFF"
                 android:imeOptions="actionNext"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:inputType="numberDecimal"
                 android:textColor="#FFFFFF" />
         </LinearLayout>
@@ -89,6 +91,8 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#00FFFF"
                 android:imeOptions="actionNext"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:inputType="textCapSentences"
                 android:textColor="#FFFFFF" />
         </LinearLayout>
@@ -113,6 +117,8 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#00FFFF"
                 android:imeOptions="actionDone"
+                android:focusable="true"
+                android:focusableInTouchMode="true" 
                 android:inputType="numberDecimal"
                 android:textColor="#FFFFFF" />
         </LinearLayout>

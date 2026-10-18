@@ -80,7 +80,6 @@ public class MercadoFragment extends Fragment {
 
         Button btnAdicionar = view.findViewById(R.id.btnAdicionar);
         Button btnRemover = view.findViewById(R.id.btnRemover);
-        Button btnLimpar = view.findViewById(R.id.btnLimpar);
         btnSalvar = view.findViewById(R.id.btnSalvar);
         btnEnviar = view.findViewById(R.id.btnEnviar);
 
@@ -91,7 +90,6 @@ public class MercadoFragment extends Fragment {
 
         btnAdicionar.setOnClickListener(v -> adicionarProduto());
         btnRemover.setOnClickListener(v -> removerSelecionados());
-        btnLimpar.setOnClickListener(v -> limparTudo());
         btnSalvar.setOnClickListener(v -> salvarPdf());
         btnEnviar.setOnClickListener(v -> compartilharPdf());
 

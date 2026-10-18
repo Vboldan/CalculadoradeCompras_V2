@@ -2,41 +2,53 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
     android:orientation="vertical"
+    android:background="#12161F"
     android:padding="16dp">
 
-    <!-- Título da Tela -->
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="HISTÓRICO DE GASTOS"
         android:textColor="#FFFFFF"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginBottom="16dp"/>
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp" />
 
-    <!-- Botão para Limpar Histórico -->
-    <Button
-        android:id="@+id/btnLimparHistorico"
+    <!-- Container horizontal com os botões Limpar e Exportar CSV -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Limpar Histórico"
-        android:backgroundTint="#4A5568"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="12dp"/>
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
 
-    <!-- Lista com Scroll para exibir os registros do banco -->
+        <Button
+            android:id="@+id/btnLimparHistorico"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Limpar Histórico"
+            android:backgroundTint="#4A5568"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btnExportarCsv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Exportar CSV"
+            android:backgroundTint="#3B88F4"
+            android:textColor="#FFFFFF"/>
+    </LinearLayout>
+
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#1E1E1E"
-        android:padding="8dp">
+        android:layout_height="match_parent">
 
         <LinearLayout
-            android:id="@+id/boxListaHistorico"
+            android:id="@+id/containerHistorico"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />

@@ -1,8 +1,9 @@
 package com.exemplo.calculadoradecompras;
 
-import android.graphics.Color;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,140 +14,160 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
 public class HistoricoFragment extends Fragment {
 
-    private LinearLayout boxListaHistorico;
-    private Button btnLimparHistorico;
+    private LinearLayout containerHistorico;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_historico, container, false);
 
-        boxListaHistorico = view.findViewById(R.id.boxListaHistorico);
-        btnLimparHistorico = view.findViewById(R.id.btnLimparHistorico);
+        containerHistorico = view.findViewById(R.id.containerHistorico);
+        Button btnLimparHistorico = view.findViewById(R.id.btnLimparHistorico);
+        Button btnExportarCsv = view.findViewById(R.id.btnExportarCsv);
 
-        btnLimparHistorico.setOnClickListener(v -> confirmarLimpeza());
+        btnLimparHistorico.setOnClickListener(v -> limparHistorico());
+        
+        if (btnExportarCsv != null) {
+            btnExportarCsv.setOnClickListener(v -> exportarParaCsv());
+        }
+
         carregarHistorico();
-
         return view;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        carregarHistorico();
-    }
-
     private void carregarHistorico() {
-        boxListaHistorico.removeAllViews();
-
         new Thread(() -> {
-            List<GastoEntity> gastos = AppDatabase.getDatabase(requireContext()).gastoDao().obterTodosGastos();
+            GastoDao dao = AppDatabase.getDatabase(requireContext()).gastoDao();
+            List<GastoEntity> lista = dao.obterTodosGastos();
 
-            requireActivity().runOnUiThread(() -> {
-                if (gastos.isEmpty()) {
-                    TextView tvVazio = new TextView(getContext());
-                    tvVazio.setText("Nenhum registro encontrado no histórico.");
-                    tvVazio.setTextColor(Color.GRAY);
-                    tvVazio.setTextSize(14);
-                    tvVazio.setGravity(Gravity.CENTER);
-                    tvVazio.setPadding(16, 32, 16, 16);
-                    boxListaHistorico.addView(tvVazio);
-                    return;
-                }
-
-                for (GastoEntity g : gastos) {
-                    LinearLayout row = new LinearLayout(getContext());
-                    row.setOrientation(LinearLayout.VERTICAL);
-                    row.setLayoutParams(new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                    ));
-                    row.setPadding(16, 14, 16, 14);
-                    row.setBackgroundColor(0xFF252525);
-
-                    // Linha superior: Categoria (Sem colchetes) e Data
-                    LinearLayout topRow = new LinearLayout(getContext());
-                    topRow.setOrientation(LinearLayout.HORIZONTAL);
-                    topRow.setLayoutParams(new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                    ));
-
-                    TextView tvCategoria = new TextView(getContext());
-                    tvCategoria.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
-                    tvCategoria.setText(g.getCategoria()); // Sem colchetes
-                    tvCategoria.setTextColor(0xFF00FFFF);
-                    tvCategoria.setTextSize(13);
-                    tvCategoria.setTypeface(null, android.graphics.Typeface.BOLD);
-
-                    TextView tvData = new TextView(getContext());
-                    tvData.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    tvData.setText(g.getData());
-                    tvData.setTextColor(Color.parseColor("#CCCCCC"));
-                    tvData.setTextSize(11);
-
-                    topRow.addView(tvCategoria);
-                    topRow.addView(tvData);
-
-                    // Nome do Item (Ex: Internet, Luz, Arroz)
-                    TextView tvDescricao = new TextView(getContext());
-                    tvDescricao.setLayoutParams(new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                    ));
-                    tvDescricao.setText(g.getDescricao());
-                    tvDescricao.setTextColor(Color.WHITE);
-                    tvDescricao.setTextSize(15);
-                    tvDescricao.setTypeface(null, android.graphics.Typeface.BOLD);
-                    tvDescricao.setPadding(0, 4, 0, 4);
-
-                    // Valor Individual
-                    TextView tvValor = new TextView(getContext());
-                    tvValor.setLayoutParams(new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                    ));
-                    tvValor.setText(String.format(Locale.getDefault(), "R$ %.2f", g.getValor()));
-                    tvValor.setTextColor(0xFF00FF00);
-                    tvValor.setTextSize(14);
-
-                    row.addView(topRow);
-                    row.addView(tvDescricao);
-                    row.addView(tvValor);
-
-                    View separador = new View(getContext());
-                    LinearLayout.LayoutParams sepParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 6);
-                    separador.setLayoutParams(sepParams);
-
-                    boxListaHistorico.addView(row);
-                    boxListaHistorico.addView(separador);
-                }
-            });
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> montarListaVisual(lista));
+            }
         }).start();
     }
 
-    private void confirmarLimpeza() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Limpar Histórico")
-                .setMessage("Deseja realmente apagar todos os registros salvos no banco de dados?")
-                .setPositiveButton("Sim", (dialog, which) -> {
-                    new Thread(() -> {
-                        AppDatabase.getDatabase(requireContext()).gastoDao().limparTudo();
-                        requireActivity().runOnUiThread(() -> {
-                            carregarHistorico();
-                            Toast.makeText(getContext(), "Histórico limpo com sucesso!", Toast.LENGTH_SHORT).show();
-                        });
-                    }).start();
-                })
-                .setNegativeButton("Não", null)
-                .show();
+    private void montarListaVisual(List<GastoEntity> lista) {
+        containerHistorico.removeAllViews();
+
+        if (lista.isEmpty()) {
+            TextView emptyText = new TextView(getContext());
+            emptyText.setText("Nenhum registro encontrado.");
+            emptyText.setTextColor(0xFF888888);
+            emptyText.setPadding(32, 32, 32, 32);
+            containerHistorico.addView(emptyText);
+            return;
+        }
+
+        for (GastoEntity item : lista) {
+            LinearLayout itemLayout = new LinearLayout(getContext());
+            itemLayout.setOrientation(LinearLayout.VERTICAL);
+            itemLayout.setPadding(24, 16, 24, 16);
+
+            TextView txtCategoriaData = new TextView(getContext());
+            txtCategoriaData.setText(String.format("%s - %s", item.categoria, item.dataHora));
+            txtCategoriaData.setTextColor(0xFF00FFFF);
+            txtCategoriaData.setTextSize(12);
+
+            TextView txtDescricao = new TextView(getContext());
+            txtDescricao.setText(item.descricao);
+            txtDescricao.setTextColor(0xFFFFFFFF);
+            txtDescricao.setTextSize(16);
+
+            TextView txtValor = new TextView(getContext());
+            txtValor.setText(String.format(Locale.getDefault(), "R$ %.2f", item.valor));
+            txtValor.setTextColor(0xFF00FF00);
+            txtValor.setTextSize(14);
+
+            itemLayout.addView(txtCategoriaData);
+            itemLayout.addView(txtDescricao);
+            itemLayout.addView(txtValor);
+
+            containerHistorico.addView(itemLayout);
+        }
+    }
+
+    private void exportarParaCsv() {
+        new Thread(() -> {
+            GastoDao dao = AppDatabase.getDatabase(requireContext()).gastoDao();
+            List<GastoEntity> lista = dao.obterTodosGastos();
+
+            if (lista.isEmpty()) {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> 
+                        Toast.makeText(getContext(), "Não há dados para exportar!", Toast.LENGTH_SHORT).show()
+                    );
+                }
+                return;
+            }
+
+            File csvFile = new File(requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "historico_compras.csv");
+
+            try (FileWriter writer = new FileWriter(csvFile)) {
+                // Escreve o cabeçalho do arquivo CSV
+                writer.append("id,data_hora,categoria,descricao,valor\n");
+
+                // Escreve cada registro do banco de dados
+                for (GastoEntity g : lista) {
+                    writer.append(String.valueOf(g.id)).append(",")
+                          .append("\"").append(g.dataHora).append("\",")
+                          .append("\"").append(g.categoria).append("\",")
+                          .append("\"").append(g.descricao.replace("\"", "\"\"")).append("\",")
+                          .append(String.format(Locale.US, "%.2f", g.valor)).append("\n");
+                }
+
+                writer.flush();
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> compartilharCsv(csvFile));
+                }
+
+            } catch (IOException e) {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> 
+                        Toast.makeText(getContext(), "Erro ao gerar CSV: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }
+        }).start();
+    }
+
+    private void compartilharCsv(File csvFile) {
+        try {
+            Uri uri = FileProvider.getUriForFile(requireContext(), requireContext().getPackageName() + ".fileprovider", csvFile);
+            
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/csv");
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+            startActivity(Intent.createChooser(intent, "Exportar Histórico CSV"));
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Erro ao compartilhar CSV: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void limparHistorico() {
+        new Thread(() -> {
+            GastoDao dao = AppDatabase.getDatabase(requireContext()).gastoDao();
+            dao.limparTudo();
+
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    carregarHistorico();
+                    Toast.makeText(getContext(), "Histórico limpo com sucesso!", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
     }
 }

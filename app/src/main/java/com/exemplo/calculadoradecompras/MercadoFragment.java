@@ -1,5 +1,6 @@
 package com.exemplo.calculadoradecompras;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -35,7 +37,7 @@ import java.util.Locale;
 public class MercadoFragment extends Fragment {
 
     private EditText entLimite, entProduto, entPreco, entQtd;
-    private TextView lblStatus, lblData, lblItemMaisCaro;
+    private TextView lblStatus, lblData;
     private Button btnSalvar, btnEnviar;
     private LinearLayout boxLista;
 
@@ -76,7 +78,6 @@ public class MercadoFragment extends Fragment {
 
         lblStatus = view.findViewById(R.id.lblStatus);
         lblData = view.findViewById(R.id.lblData);
-        lblItemMaisCaro = view.findViewById(R.id.lblItemMaisCaro);
 
         Button btnAdicionar = view.findViewById(R.id.btnAdicionar);
         Button btnRemover = view.findViewById(R.id.btnRemover);
@@ -93,7 +94,48 @@ public class MercadoFragment extends Fragment {
         btnSalvar.setOnClickListener(v -> salvarPdf());
         btnEnviar.setOnClickListener(v -> compartilharPdf());
 
+        // Ações de teclado para navegar fluido entre os campos
+        entLimite.setOnEditorActionListener((v, actionId, event) -> {
+            focarECandidatarCursor(entProduto);
+            return true;
+        });
+
+        entProduto.setOnEditorActionListener((v, actionId, event) -> {
+            focarECandidatarCursor(entPreco);
+            return true;
+        });
+
+        entPreco.setOnEditorActionListener((v, actionId, event) -> {
+            focarECandidatarCursor(entQtd);
+            return true;
+        });
+
+        entQtd.setOnEditorActionListener((v, actionId, event) -> {
+            adicionarProduto();
+            return true;
+        });
+
+        atualizarLista();
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (entLimite != null) {
+            entLimite.postDelayed(() -> focarECandidatarCursor(entLimite), 250);
+        }
+    }
+
+    private void focarECandidatarCursor(EditText campo) {
+        if (campo != null && isAdded()) {
+            campo.requestFocus();
+            campo.setSelection(campo.getText().length());
+            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showSoftInput(campo, InputMethodManager.SHOW_IMPLICIT);
+            }
+        }
     }
 
     private double obterLimite() {
@@ -111,8 +153,15 @@ public class MercadoFragment extends Fragment {
         String precoStr = entPreco.getText().toString().trim();
         String qtdStr = entQtd.getText().toString().trim();
 
-        if (nome.isEmpty() || precoStr.isEmpty()) {
-            Toast.makeText(getContext(), "Informe o nome e o preço do produto", Toast.LENGTH_SHORT).show();
+        if (nome.isEmpty()) {
+            Toast.makeText(getContext(), "Informe o nome do produto", Toast.LENGTH_SHORT).show();
+            focarECandidatarCursor(entProduto);
+            return;
+        }
+
+        if (precoStr.isEmpty()) {
+            Toast.makeText(getContext(), "Informe o preço do produto", Toast.LENGTH_SHORT).show();
+            focarECandidatarCursor(entPreco);
             return;
         }
 
@@ -125,8 +174,8 @@ public class MercadoFragment extends Fragment {
             entProduto.setText("");
             entPreco.setText("");
             entQtd.setText("1");
-            entProduto.requestFocus();
 
+            focarECandidatarCursor(entProduto);
             atualizarLista();
         } catch (NumberFormatException e) {
             Toast.makeText(getContext(), "Valores inválidos!", Toast.LENGTH_SHORT).show();
@@ -138,30 +187,33 @@ public class MercadoFragment extends Fragment {
         for (Produto p : produtos) {
             if (p.isSelecionado()) paraRemover.add(p);
         }
+
+        if (paraRemover.isEmpty()) {
+            Toast.makeText(getContext(), "Toque em um item para selecionar antes de excluir", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         produtos.removeAll(paraRemover);
         atualizarLista();
     }
 
     private void limparTudo() {
         produtos.clear();
+        entLimite.setText("");
         entProduto.setText("");
         entPreco.setText("");
         entQtd.setText("1");
         atualizarLista();
+        focarECandidatarCursor(entLimite);
     }
 
     private void atualizarLista() {
         boxLista.removeAllViews();
         totalGasto = 0.0;
-        Produto maisCaro = null;
 
         for (int i = 0; i < produtos.size(); i++) {
             final Produto p = produtos.get(i);
             totalGasto += p.getSubtotal();
-
-            if (maisCaro == null || p.getPreco() > maisCaro.getPreco()) {
-                maisCaro = p;
-            }
 
             LinearLayout itemLayout = new LinearLayout(getContext());
             itemLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -199,12 +251,6 @@ public class MercadoFragment extends Fragment {
         double restante = limite - totalGasto;
 
         lblStatus.setText(String.format(Locale.getDefault(), "Total: R$ %.2f | Restante: R$ %.2f", totalGasto, restante));
-
-        if (maisCaro != null) {
-            lblItemMaisCaro.setText(String.format(Locale.getDefault(), "Mais caro: %s (R$ %.2f)", maisCaro.getNome(), maisCaro.getPreco()));
-        } else {
-            lblItemMaisCaro.setText("Mais caro: -");
-        }
     }
 
     private void salvarPdf() {
@@ -276,8 +322,6 @@ public class MercadoFragment extends Fragment {
         canvas.drawText(String.format(Locale.getDefault(), "TOTAL GASTO: R$ %.2f", totalGasto), 50, y, paint);
         y += 20;
         canvas.drawText(String.format(Locale.getDefault(), "SALDO RESTANTE: R$ %.2f", obterLimite() - totalGasto), 50, y, paint);
-        y += 20;
-        canvas.drawText(String.format(Locale.getDefault(), "PRODUTO MAIS CARO: %s (R$ %.2f)", maisCaro.getNome(), maisCaro.getPreco()), 50, y, paint);
 
         document.finishPage(page);
 
@@ -288,7 +332,7 @@ public class MercadoFragment extends Fragment {
             document.writeTo(new FileOutputStream(ultimoArquivoPdf));
             btnEnviar.setEnabled(true);
 
-            // Anexa os itens no arquivo CSV na ordem correta
+            // Anexa os registros no arquivo CSV único e público
             String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(new Date());
             List<CsvHelper.RegistroCsvItem> itensCsv = new ArrayList<>();
             for (Produto p : produtos) {
@@ -298,6 +342,8 @@ public class MercadoFragment extends Fragment {
             CsvHelper.adicionarRegistros(requireContext(), "Mercado", itensCsv);
 
             Toast.makeText(getContext(), "PDF gerado e dados salvos no CSV!", Toast.LENGTH_LONG).show();
+
+            // Limpa a tela e posiciona o cursor na posição inicial (Limite)
             limparTudo();
         } catch (IOException e) {
             Toast.makeText(getContext(), "Erro ao salvar PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();

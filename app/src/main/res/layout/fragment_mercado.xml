@@ -1,221 +1,264 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#12161F"
-    android:padding="16dp">
+    android:background="#23272d"
+    android:fillViewport="true">
 
-    <!-- Card de Título -->
-    <TextView
-        android:id="@+id/lblTitulo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="COMPRAS DE MERCADO"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:background="#3B4556"
-        android:padding="12dp"
-        android:layout_marginBottom="12dp" />
-
-    <TextView
-        android:id="@+id/lblData"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Data: 18/10/2026 - 00:00"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Campo Limite R$: -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="12dp">
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:padding="16dp">
 
+        <!-- Card de Título Idêntico ao Contas Fixas -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="#505c71"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="COMPRAS DE MERCADO"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Data -->
         <TextView
-            android:layout_width="110dp"
+            android:id="@+id/lblData"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Limite R$:"
+            android:layout_marginBottom="12dp"
             android:textColor="#FFFFFF"
-            android:textSize="15sp" />
+            android:textSize="14sp" />
 
-        <EditText
-            android:id="@+id/entLimite"
-            android:layout_width="0dp"
+        <!-- Campo Limite R$: -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:inputType="numberDecimal"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#00FFFF"
-            android:imeOptions="actionNext" />
-    </LinearLayout>
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-    <!-- Campo Produto: -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="12dp">
+            <TextView
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:text="Limite R$:"
+                android:textColor="#FFFFFF" />
 
+            <EditText
+                android:id="@+id/entLimite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00FFFF"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- Campo Produto: -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:text="Produto:"
+                android:textColor="#FFFFFF" />
+
+            <EditText
+                android:id="@+id/entProduto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00FFFF"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:imeOptions="actionNext"
+                android:inputType="textCapSentences"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- Campo Preço e Qtd: -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:text="Preço R$:"
+                android:textColor="#FFFFFF" />
+
+            <EditText
+                android:id="@+id/entPreco"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:backgroundTint="#00FFFF"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="4dp"
+                android:text="Qtd:"
+                android:textColor="#FFFFFF" />
+
+            <!-- selectAllOnFocus="true" permite digitar por cima sem apagar -->
+            <EditText
+                android:id="@+id/entQtd"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00FFFF"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:imeOptions="actionDone"
+                android:inputType="number"
+                android:selectAllOnFocus="true"
+                android:text="1"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- Botões de Ação Padronizados -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:padding="2dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAdicionar"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1.2"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="2dp"
+                android:text="Adicionar"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                app:backgroundTint="#4A4E54"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRemover"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="2dp"
+                android:text="Excluir"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                app:backgroundTint="#4A4E54"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSalvar"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="2dp"
+                android:text="Salvar"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                app:backgroundTint="#4A4E54"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEnviar"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="2dp"
+                android:text="Enviar"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                app:backgroundTint="#4A4E54"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- Status / Resumo -->
         <TextView
-            android:layout_width="110dp"
+            android:id="@+id/lblStatus"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Produto:"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp" />
+            android:layout_marginBottom="8dp"
+            android:text="Total: R$ 0,00 | Restante: R$ 0,00"
+            android:textColor="#00ffff"
+            android:textSize="16sp" />
 
-        <EditText
-            android:id="@+id/entProduto"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:inputType="text"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#00FFFF"
-            android:imeOptions="actionNext" />
-    </LinearLayout>
-
-    <!-- Campo Preço e Qtd: -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
-
-        <TextView
-            android:layout_width="110dp"
-            android:layout_height="wrap_content"
-            android:text="Preço R$:"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp" />
-
-        <EditText
-            android:id="@+id/entPreco"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:inputType="numberDecimal"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#00FFFF"
-            android:layout_marginEnd="8dp"
-            android:imeOptions="actionNext" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Qtd:"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:layout_marginEnd="4dp" />
-
-        <EditText
-            android:id="@+id/entQtd"
-            android:layout_width="50dp"
-            android:layout_height="wrap_content"
-            android:text="1"
-            android:inputType="number"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#00FFFF"
-            android:imeOptions="actionDone" />
-    </LinearLayout>
-
-    <!-- Linha de Botões (Adicionar, Excluir, Salvar, Enviar) -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
-
-        <Button
-            android:id="@+id/btnAdicionar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Adicionar"
-            android:backgroundTint="#4A5568"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="4dp" />
-
-        <Button
-            android:id="@+id/btnRemover"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Excluir"
-            android:backgroundTint="#4A5568"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="4dp" />
-
-        <Button
-            android:id="@+id/btnSalvar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Salvar"
-            android:backgroundTint="#4A5568"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="4dp" />
-
-        <Button
-            android:id="@+id/btnEnviar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:enabled="false"
-            android:text="Enviar"
-            android:backgroundTint="#4A5568"
-            android:textColor="#FFFFFF" />
-    </LinearLayout>
-
-    <!-- Resumo do Status -->
-    <TextView
-        android:id="@+id/lblStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Total: R$ 0,00 | Restante: R$ 0,00"
-        android:textColor="#00FFFF"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="4dp" />
-
-    <TextView
-        android:id="@+id/lblItemMaisCaro"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Mais caro: -"
-        android:textColor="#FFA500"
-        android:textSize="13sp"
-        android:layout_marginBottom="8dp" />
-
-    <!-- Lista de Itens -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginBottom="12dp">
-
+        <!-- Container da Lista de Produtos -->
         <LinearLayout
             android:id="@+id/boxLista"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
-    </ScrollView>
+            android:orientation="vertical"
+            android:padding="4dp" />
 
-    <!-- Rodapé -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Desenvolvido por Valdeci Boldan (GitHub)"
-        android:textColor="#888888"
-        android:textSize="12sp"
-        android:gravity="center"
-        android:layout_marginTop="8dp" />
+        <!-- Rodapé -->
+        <TextView
+            android:id="@+id/tvFooterMercado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:alpha="0.7"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:padding="12dp"
+            android:text="Desenvolvido por Valdeci Boldan (GitHub)"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp" />
 
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>

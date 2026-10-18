@@ -75,17 +75,17 @@ public class HistoricoFragment extends Fragment {
             itemLayout.setPadding(24, 16, 24, 16);
 
             TextView txtCategoriaData = new TextView(getContext());
-            txtCategoriaData.setText(String.format("%s - %s", item.categoria, item.dataHora));
+            txtCategoriaData.setText(String.format("%s - %s", item.getCategoria(), item.getData()));
             txtCategoriaData.setTextColor(0xFF00FFFF);
             txtCategoriaData.setTextSize(12);
 
             TextView txtDescricao = new TextView(getContext());
-            txtDescricao.setText(item.descricao);
+            txtDescricao.setText(item.getDescricao());
             txtDescricao.setTextColor(0xFFFFFFFF);
             txtDescricao.setTextSize(16);
 
             TextView txtValor = new TextView(getContext());
-            txtValor.setText(String.format(Locale.getDefault(), "R$ %.2f", item.valor));
+            txtValor.setText(String.format(Locale.getDefault(), "R$ %.2f", item.getValor()));
             txtValor.setTextColor(0xFF00FF00);
             txtValor.setTextSize(14);
 
@@ -117,13 +117,13 @@ public class HistoricoFragment extends Fragment {
                 // Escreve o cabeçalho do arquivo CSV
                 writer.append("id,data_hora,categoria,descricao,valor\n");
 
-                // Escreve cada registro do banco de dados
+                // Escreve cada registro usando os Getters
                 for (GastoEntity g : lista) {
-                    writer.append(String.valueOf(g.id)).append(",")
-                          .append("\"").append(g.dataHora).append("\",")
-                          .append("\"").append(g.categoria).append("\",")
-                          .append("\"").append(g.descricao.replace("\"", "\"\"")).append("\",")
-                          .append(String.format(Locale.US, "%.2f", g.valor)).append("\n");
+                    writer.append(String.valueOf(g.getId())).append(",")
+                          .append("\"").append(g.getData()).append("\",")
+                          .append("\"").append(g.getCategoria()).append("\",")
+                          .append("\"").append(g.getDescricao().replace("\"", "\"\"")).append("\",")
+                          .append(String.format(Locale.US, "%.2f", g.getValor())).append("\n");
                 }
 
                 writer.flush();

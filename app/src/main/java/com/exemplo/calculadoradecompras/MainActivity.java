@@ -27,8 +27,6 @@ public class MainActivity extends AppCompatActivity {
                 tab.setText("Mercado");
             } else if (position == 1) {
                 tab.setText("Contas Fixas");
-            } else {
-                tab.setText("Histórico");
             }
         }).attach(); 
     }

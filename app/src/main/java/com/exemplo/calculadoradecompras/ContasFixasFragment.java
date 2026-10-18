@@ -15,7 +15,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,7 +39,7 @@ public class ContasFixasFragment extends Fragment {
 
     private TextView lblDataContas, lblStatusContas;
     private EditText entRendaContas, entNomeConta, entValorConta;
-    private Button btnAddConta, btnExcConta, btnSalvarContas, btnEnviarContas;
+    private Button btnEnviarContas;
     private LinearLayout boxListaContas;
 
     private static class ContaItem {
@@ -70,9 +69,9 @@ public class ContasFixasFragment extends Fragment {
         entValorConta = view.findViewById(R.id.entValorConta);
         boxListaContas = view.findViewById(R.id.boxListaContas);
 
-        btnAddConta = view.findViewById(R.id.btnAddConta);
-        btnExcConta = view.findViewById(R.id.btnExcConta);
-        btnSalvarContas = view.findViewById(R.id.btnSalvarContas);
+        Button btnAddConta = view.findViewById(R.id.btnAddConta);
+        Button btnExcConta = view.findViewById(R.id.btnExcConta);
+        Button btnSalvarContas = view.findViewById(R.id.btnSalvarContas);
         btnEnviarContas = view.findViewById(R.id.btnEnviarContas);
 
         SimpleDateFormat sdf = new SimpleDateFormat("'Data:' dd/MM/yyyy - HH:mm", Locale.getDefault());
@@ -82,23 +81,16 @@ public class ContasFixasFragment extends Fragment {
             if (!hasFocus) atualizarResumo();
         });
 
-        // =========================================================================
-        // DIRECIONAMENTO AUTOMÁTICO DO CURSOR E DO FOCO AO PRESSIONAR "ENTER/NEXT"
-        // =========================================================================
-        
-        // 1. Da Renda para o Nome da Conta
         entRendaContas.setOnEditorActionListener((v, actionId, event) -> {
             focarECandidatarCursor(entNomeConta);
             return true;
         });
 
-        // 2. Do Nome da Conta para o Valor
         entNomeConta.setOnEditorActionListener((v, actionId, event) -> {
             focarECandidatarCursor(entValorConta);
             return true;
         });
 
-        // 3. Do Valor envia diretamente para adicionar a conta e volta para o Nome da Conta
         entValorConta.setOnEditorActionListener((v, actionId, event) -> {
             adicionarConta();
             return true;
@@ -116,13 +108,11 @@ public class ContasFixasFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Foca automaticamente no primeiro campo ao abrir a aba
         if (entRendaContas != null) {
             entRendaContas.postDelayed(() -> focarECandidatarCursor(entRendaContas), 250);
         }
     }
 
-    // Método auxiliar para garantir que o campo ganhe foco, o cursor fique no final e o teclado apareça
     private void focarECandidatarCursor(EditText campo) {
         if (campo != null && isAdded()) {
             campo.requestFocus();
@@ -157,11 +147,8 @@ public class ContasFixasFragment extends Fragment {
             entNomeConta.setText("");
             entValorConta.setText("");
             
-            // Retorna o foco e o cursor automaticamente para o campo de Nome da Conta para a próxima inserção
             focarECandidatarCursor(entNomeConta);
-
             atualizarListaEStatus();
-            Toast.makeText(getContext(), "Conta adicionada!", Toast.LENGTH_SHORT).show();
         } catch (NumberFormatException e) {
             Toast.makeText(getContext(), "Valor inválido!", Toast.LENGTH_SHORT).show();
         }
@@ -174,13 +161,12 @@ public class ContasFixasFragment extends Fragment {
         }
 
         if (paraRemover.isEmpty()) {
-            Toast.makeText(getContext(), "Toque em um item da lista para selecioná-lo antes de excluir", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Toque em um item para selecionar antes de excluir", Toast.LENGTH_SHORT).show();
             return;
         }
 
         listaContas.removeAll(paraRemover);
         atualizarListaEStatus();
-        Toast.makeText(getContext(), "Itens selecionados excluídos", Toast.LENGTH_SHORT).show();
     }
 
     private void salvarEGerarPDF() {
@@ -192,19 +178,16 @@ public class ContasFixasFragment extends Fragment {
         pdfGeradoFile = criarPDFPadronizado();
 
         if (pdfGeradoFile != null) {
-            Toast.makeText(getContext(), "PDF de Contas Fixas gerado com sucesso!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "PDF de Contas Fixas gerado e CSV atualizado!", Toast.LENGTH_SHORT).show();
             btnEnviarContas.setEnabled(true);
 
-            String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
-            List<ContaItem> contasParaSalvar = new ArrayList<>(listaContas);
-
-            new Thread(() -> {
-                GastoDao dao = AppDatabase.getDatabase(requireContext()).gastoDao();
-                for (ContaItem item : contasParaSalvar) {
-                    GastoEntity g = new GastoEntity(dataSalvar, "Contas Fixas", item.valor, item.nome);
-                    dao.inserir(g);
-                }
-            }).start();
+            // Anexa as contas fixas diretamente no ficheiro CSV
+            String dataSalvar = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(new Date());
+            List<CsvHelper.RegistroCsvItem> itensCsv = new ArrayList<>();
+            for (ContaItem item : listaContas) {
+                itensCsv.add(new CsvHelper.RegistroCsvItem(dataSalvar, item.nome, item.valor));
+            }
+            CsvHelper.adicionarRegistros(requireContext(), "Contas Fixas", itensCsv);
         }
 
         listaContas.clear();
@@ -248,7 +231,6 @@ public class ContasFixasFragment extends Fragment {
         canvas.drawText(dataHoraStr, 170, y, paint);
 
         y += 35;
-
         paint.setColor(Color.parseColor("#3B88f4"));
         paint.setStyle(Paint.Style.FILL);
         canvas.drawRect(40, y - 15, 520, y + 8, paint);
@@ -260,7 +242,6 @@ public class ContasFixasFragment extends Fragment {
         canvas.drawText("Valor", 450, y + 4, paint);
 
         y += 35;
-
         paint.setFakeBoldText(false);
         paint.setTextSize(12);
         paint.setColor(Color.BLACK);
@@ -279,7 +260,6 @@ public class ContasFixasFragment extends Fragment {
         canvas.drawLine(40, y, 555, y, paint);
 
         y += 30;
-
         double renda = 0.0;
         try {
             renda = Double.parseDouble(entRendaContas.getText().toString().trim().replace(",", "."));

@@ -19,8 +19,9 @@ public class CsvHelper {
     public static void adicionarRegistros(Context context, String categoria, List<RegistroCsvItem> itens) {
         if (itens == null || itens.isEmpty()) return;
 
-        File documentsDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-        if (documentsDir != null && !documentsDir.exists()) {
+        // Aponta diretamente para a pasta pública "Documents" do telemóvel
+        File documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        if (!documentsDir.exists()) {
             documentsDir.mkdirs();
         }
 
@@ -29,7 +30,7 @@ public class CsvHelper {
 
         long proximoId = calcularProximoId(csvFile);
 
-        // 'true' ativa o modo append (anexa no final do ficheiro sem apagar)
+        // 'true' indica o modo APPEND (anexa no final do ficheiro fixo existente)
         try (FileWriter writer = new FileWriter(csvFile, true)) {
             if (arquivoNovo) {
                 writer.append("id,data_hora,categoria,descricao,valor\n");
@@ -45,7 +46,7 @@ public class CsvHelper {
             }
             writer.flush();
         } catch (IOException e) {
-            Log.e("CsvHelper", "Erro ao gravar no arquivo CSV: " + e.getMessage());
+            Log.e("CsvHelper", "Erro ao gravar no arquivo CSV público: " + e.getMessage());
         }
     }
 
@@ -59,7 +60,6 @@ public class CsvHelper {
             }
         } catch (IOException ignored) {}
 
-        // Se só tem a linha de cabeçalho (1 linha), o primeiro ID é 1.
         return Math.max(1, totalLinhas);
     }
 

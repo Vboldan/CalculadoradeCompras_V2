@@ -6,8 +6,8 @@
     android:background="#12161F"
     android:padding="16dp">
 
-    <!-- Cabeçalho e Data -->
     <TextView
+        android:id="@+id/lblTitulo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="COMPRAS DE MERCADO"
@@ -15,7 +15,7 @@
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="8dp"/>
 
     <TextView
         android:id="@+id/lblData"
@@ -25,39 +25,38 @@
         android:textColor="#00FFFF"
         android:textSize="14sp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"/>
 
-    <!-- Campo de Limite -->
     <EditText
         android:id="@+id/entLimite"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Limite disponível (R$)"
+        android:hint="Valor disponível (R$)"
         android:inputType="numberDecimal"
         android:textColor="#FFFFFF"
         android:textColorHint="#888888"
         android:backgroundTint="#3B88F4"
         android:layout_marginBottom="12dp"
-        android:imeOptions="actionNext" />
+        android:imeOptions="actionNext"/>
 
-    <!-- Campos de Entrada de Produto -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="12dp">
 
         <EditText
             android:id="@+id/entProduto"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
+            android:layout_weight="1.5"
             android:hint="Nome do produto"
             android:inputType="text"
             android:textColor="#FFFFFF"
             android:textColorHint="#888888"
             android:backgroundTint="#3B88F4"
-            android:imeOptions="actionNext" />
+            android:layout_marginEnd="8dp"
+            android:imeOptions="actionNext"/>
 
         <EditText
             android:id="@+id/entPreco"
@@ -69,7 +68,8 @@
             android:textColor="#FFFFFF"
             android:textColorHint="#888888"
             android:backgroundTint="#3B88F4"
-            android:imeOptions="actionNext" />
+            android:layout_marginEnd="8dp"
+            android:imeOptions="actionNext"/>
 
         <EditText
             android:id="@+id/entQtd"
@@ -81,10 +81,9 @@
             android:textColor="#FFFFFF"
             android:textColorHint="#888888"
             android:backgroundTint="#3B88F4"
-            android:imeOptions="actionDone" />
+            android:imeOptions="actionDone"/>
     </LinearLayout>
 
-    <!-- Botões de Ação (Adicionar, Remover, Limpar) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -99,7 +98,7 @@
             android:text="Adicionar"
             android:backgroundTint="#3B88F4"
             android:textColor="#FFFFFF"
-            android:layout_marginEnd="4dp" />
+            android:layout_marginEnd="4dp"/>
 
         <Button
             android:id="@+id/btnRemover"
@@ -109,7 +108,7 @@
             android:text="Excluir"
             android:backgroundTint="#E53E3E"
             android:textColor="#FFFFFF"
-            android:layout_marginEnd="4dp" />
+            android:layout_marginEnd="4dp"/>
 
         <Button
             android:id="@+id/btnLimpar"
@@ -118,19 +117,18 @@
             android:layout_weight="1"
             android:text="Limpar"
             android:backgroundTint="#4A5568"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"/>
     </LinearLayout>
 
-    <!-- Painel de Status e Item Mais Caro -->
     <TextView
         android:id="@+id/lblStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Total: R$ 0.00 | Restante: R$ 0.00"
+        android:text="Total: R$ 0,00 | Restante: R$ 0,00"
         android:textColor="#00FF00"
         android:textSize="15sp"
         android:textStyle="bold"
-        android:layout_marginBottom="4dp" />
+        android:layout_marginBottom="4dp"/>
 
     <TextView
         android:id="@+id/lblItemMaisCaro"
@@ -139,9 +137,8 @@
         android:text="Mais caro: -"
         android:textColor="#FFA500"
         android:textSize="13sp"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="8dp"/>
 
-    <!-- Lista com Scroll -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -152,10 +149,9 @@
             android:id="@+id/boxLista"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:orientation="vertical"/>
     </ScrollView>
 
-    <!-- Botões Finais de Salvar PDF e Enviar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -166,10 +162,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Salvar (PDF &amp; CSV)"
+            android:text="Salvar"
             android:backgroundTint="#38A169"
             android:textColor="#FFFFFF"
-            android:layout_marginEnd="8dp" />
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/btnEnviar"
@@ -177,9 +173,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:enabled="false"
-            android:text="Enviar PDF"
+            android:text="Enviar"
             android:backgroundTint="#3B88F4"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"/>
     </LinearLayout>
 
 </LinearLayout>

@@ -15,12 +15,14 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
@@ -80,6 +82,28 @@ public class ContasFixasFragment extends Fragment {
             if (!hasFocus) atualizarResumo();
         });
 
+        // =========================================================================
+        // DIRECIONAMENTO AUTOMÁTICO DO CURSOR E DO FOCO AO PRESSIONAR "ENTER/NEXT"
+        // =========================================================================
+        
+        // 1. Da Renda para o Nome da Conta
+        entRendaContas.setOnEditorActionListener((v, actionId, event) -> {
+            focarECandidatarCursor(entNomeConta);
+            return true;
+        });
+
+        // 2. Do Nome da Conta para o Valor
+        entNomeConta.setOnEditorActionListener((v, actionId, event) -> {
+            focarECandidatarCursor(entValorConta);
+            return true;
+        });
+
+        // 3. Do Valor envia diretamente para adicionar a conta e volta para o Nome da Conta
+        entValorConta.setOnEditorActionListener((v, actionId, event) -> {
+            adicionarConta();
+            return true;
+        });
+
         btnAddConta.setOnClickListener(v -> adicionarConta());
         btnExcConta.setOnClickListener(v -> excluirItensSelecionados());
         btnSalvarContas.setOnClickListener(v -> salvarEGerarPDF());
@@ -92,16 +116,22 @@ public class ContasFixasFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Garante que o cursor fique visível no campo de Renda assim que a aba for aberta
-        entRendaContas.postDelayed(() -> {
-            if (entRendaContas != null && isAdded()) {
-                entRendaContas.requestFocus();
-                InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                if (imm != null) {
-                    imm.showSoftInput(entRendaContas, InputMethodManager.SHOW_IMPLICIT);
-                }
+        // Foca automaticamente no primeiro campo ao abrir a aba
+        if (entRendaContas != null) {
+            entRendaContas.postDelayed(() -> focarECandidatarCursor(entRendaContas), 250);
+        }
+    }
+
+    // Método auxiliar para garantir que o campo ganhe foco, o cursor fique no final e o teclado apareça
+    private void focarECandidatarCursor(EditText campo) {
+        if (campo != null && isAdded()) {
+            campo.requestFocus();
+            campo.setSelection(campo.getText().length());
+            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showSoftInput(campo, InputMethodManager.SHOW_IMPLICIT);
             }
-        }, 200);
+        }
     }
 
     private void adicionarConta() {
@@ -110,11 +140,13 @@ public class ContasFixasFragment extends Fragment {
 
         if (nome.isEmpty()) {
             Toast.makeText(getContext(), "Informe o nome da conta", Toast.LENGTH_SHORT).show();
+            focarECandidatarCursor(entNomeConta);
             return;
         }
 
         if (valorStr.isEmpty()) {
             Toast.makeText(getContext(), "Informe o valor da conta", Toast.LENGTH_SHORT).show();
+            focarECandidatarCursor(entValorConta);
             return;
         }
 
@@ -125,8 +157,8 @@ public class ContasFixasFragment extends Fragment {
             entNomeConta.setText("");
             entValorConta.setText("");
             
-            // Retorna o cursor para o Nome da Conta para continuar digitando a próxima conta sem falha
-            entNomeConta.requestFocus();
+            // Retorna o foco e o cursor automaticamente para o campo de Nome da Conta para a próxima inserção
+            focarECandidatarCursor(entNomeConta);
 
             atualizarListaEStatus();
             Toast.makeText(getContext(), "Conta adicionada!", Toast.LENGTH_SHORT).show();
@@ -180,7 +212,7 @@ public class ContasFixasFragment extends Fragment {
         entNomeConta.setText("");
         entValorConta.setText("");
         atualizarListaEStatus();
-        entRendaContas.requestFocus();
+        focarECandidatarCursor(entRendaContas);
     }
 
     private File criarPDFPadronizado() {

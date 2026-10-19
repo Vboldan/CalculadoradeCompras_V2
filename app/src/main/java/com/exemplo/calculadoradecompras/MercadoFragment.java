@@ -173,7 +173,7 @@ public class MercadoFragment extends Fragment {
 
             entProduto.setText("");
             entPreco.setText("");
-            entQtd.setText("1");
+            entQtd.setText("");
 
             focarECandidatarCursor(entProduto);
             atualizarLista();

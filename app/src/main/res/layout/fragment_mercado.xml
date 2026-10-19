@@ -142,7 +142,8 @@
                 android:imeOptions="actionDone"
                 android:inputType="number"
                 android:selectAllOnFocus="true"
-                android:text="1"
+                android:hint="1"
+                android:textColorHint="#666666"
                 android:textColor="#FFFFFF" />
         </LinearLayout>
 
@@ -169,7 +170,7 @@
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp"
-                app:backgroundTint="#4A4E54"
+                app:backgroundTint="#505c71"
                 app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -187,7 +188,7 @@
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp"
-                app:backgroundTint="#4A4E54"
+                app:backgroundTint="#505c71"
                 app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -205,7 +206,7 @@
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp"
-                app:backgroundTint="#4A4E54"
+                app:backgroundTint="#505c71"
                 app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -223,7 +224,7 @@
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp"
-                app:backgroundTint="#4A4E54"
+                app:backgroundTint="#505c71"
                 app:cornerRadius="8dp" />
         </LinearLayout>
 
